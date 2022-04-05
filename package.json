@@ -1,0 +1,37 @@
+{
+  "name": "elm-table-tailwind",
+  "version": "1.0.0",
+  "description": "Full features ELM table component for Tailwind",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gribouille/elm-table-tailwind.git"
+  },
+  "keywords": [
+    "elm",
+    "table",
+    "javascript",
+    "tailwind"
+  ],
+  "author": "Gribouille",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/gribouille/elm-table-tailwind/issues"
+  },
+  "homepage": "https://github.com/gribouille/elm-table-tailwind#readme",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "dev": "npx tailwindcss -i ./styles/style.css -o ./style.css --watch",
+    "build": "npx tailwindcss -m -i ./styles/style.css -o ./style.css"
+  },
+  "devDependencies": {
+    "elm": "^0.19.1-5",
+    "elm-analyse": "^0.16.5",
+    "elm-format": "^0.8.5",
+    "elm-review": "^2.7.1",
+    "elm-test": "^0.19.1-revision7",
+    "tailwindcss": "^3.0.23"
+  }
+}
