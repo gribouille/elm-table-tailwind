@@ -79,21 +79,21 @@ view config ((Model m) as model) =
         pipeExt =
             pipeExternal config model
     in
-    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full" ] <|
-        case m.rows of
-            Rows Loading ->
-                [ tableHeader config pipeExt pipeInt m.state
-                , div [ class "" ] [ span [ class "gg-spinner" ] [] ]
-                ]
+    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full" ] <|
+        tableHeader config pipeExt pipeInt m.state
+            :: (case m.rows of
+                    Rows Loading ->
+                        [ div [ class "flex flex-col items-center my-11" ] [ span [ class "gg-spinner" ] [] ]
+                        ]
 
-            Rows (Loaded { total, rows }) ->
-                [ tableHeader config pipeExt pipeInt m.state
-                , tableContent config pipeExt pipeInt m.state rows
-                , tableFooter config pipeInt pipeExt m.state total
-                ]
+                    Rows (Loaded { total, rows }) ->
+                        [ tableContent config pipeExt pipeInt m.state rows
+                        , tableFooter config pipeInt pipeExt m.state total
+                        ]
 
-            Rows (Failed msg) ->
-                [ tableHeader config pipeExt pipeInt m.state, errorView msg ]
+                    Rows (Failed msg) ->
+                        [ errorView msg ]
+               )
 
 
 
@@ -131,13 +131,20 @@ headerSearch pipeExt pipeInt =
                                 | search = s
                                 , btPagination = False
                                 , btColumns = False
+                                , btSubColumns = False
                             }
                 )
             , onKeyDown
                 (\i ->
                     iff (i == 13)
-                        (pipeExt <| \state -> { state | search = state.search })
-                        (pipeExt <| \state -> state)
+                        (pipeExt <|
+                            \state ->
+                                { state
+                                    | search = state.search
+                                    , page = iff (state.search /= "") 0 state.page
+                                }
+                        )
+                        (pipeInt <| \state -> state)
                 )
             ]
             []
@@ -421,7 +428,7 @@ sort columns state rows =
     let
         compFn =
             Maybe.andThen (\(Column c) -> c.sortable) <|
-                find (\(Column c) -> Just c.name == state.orderBy) columns
+                find (\(Column c) -> Just c.field == state.orderBy) columns
     in
     maybe rows (sortRowsFromStatus state.order rows) compFn
 

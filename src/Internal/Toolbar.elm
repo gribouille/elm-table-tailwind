@@ -95,9 +95,7 @@ toolbarMenuSubColumns columns pipeInt state =
                 }
         )
         state.btSubColumns
-        (List.filterMap
-            (dropdownItem pipeInt state lensSubTable)
-         <|
+        (List.filterMap (dropdownItem pipeInt state lensSubTable) <|
             List.map (\(Column c) -> ( c.name, c.hiddable )) columns
         )
 
@@ -148,6 +146,8 @@ toolbarMenuDropdown btn tt msg active items =
             [ type_ "button"
             , onClick msg
             , attribute "tooltip" tt
+            , attribute "data-tippy-content" tt
+            , attribute "data-tippy-placement" "bottom"
             , class "text-gray-900 bg-white border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 text-center inline-flex items-center h-[38px] w-[46px]"
             ]
             [ i [ class btn ] [] ]

@@ -24,23 +24,23 @@ type Msg
 
 
 columnsMovie =
-    [ Column.string .id "ID" "" |> Column.withDefault False
-    , Column.string .title "Title" ""
-    , Column.string .original_title "Original title" ""
-    , Column.string .original_title_romanised "Original title romanised" ""
-    , Column.string .director "Director" ""
-    , Column.string .producer "Producer" ""
-    , Column.int .release_date "Release date" ""
-    , Column.int .running_time "Running time" ""
-    , Column.int .rt_score "RT score" ""
+    [ Column.string .id "ID" "" "" |> Column.withDefault False
+    , Column.string .title "Title" "" ""
+    , Column.string .original_title "Original title" "" ""
+    , Column.string .original_title_romanised "Original title romanised" "" ""
+    , Column.string .director "Director" "" ""
+    , Column.string .producer "Producer" "" ""
+    , Column.int .release_date "Release date" "" ""
+    , Column.int .running_time "Running time" "" ""
+    , Column.int .rt_score "RT score" "" ""
     ]
 
 
 columnsPerson =
-    [ Column.string .id "ID" "" |> Column.withDefault False
-    , Column.string .name "name" ""
-    , Column.string .gender "Gender" ""
-    , Column.default "Age"
+    [ Column.string .id "ID" "" "" |> Column.withDefault False
+    , Column.string .name "name" "" ""
+    , Column.string .gender "Gender" "" ""
+    , Column.default "Age" "" ""
         ""
         (\x _ ->
             [ case x.age of
@@ -51,8 +51,8 @@ columnsPerson =
                     text <| String.fromInt v
             ]
         )
-    , Column.string .eye_color "Eye color" ""
-    , Column.string .hair_color "Hair color" ""
+    , Column.string .eye_color "Eye color" "" ""
+    , Column.string .hair_color "Hair color" "" ""
     ]
 
 

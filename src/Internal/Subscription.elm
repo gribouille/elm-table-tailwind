@@ -19,7 +19,7 @@ subscriptions config model =
 
 isModal : Model a -> Bool
 isModal (Model { state }) =
-    state.btColumns || state.btPagination
+    state.btColumns || state.btPagination || state.btSubColumns
 
 
 outsideTarget : Pipe msg -> String -> Decode.Decoder msg
@@ -34,6 +34,7 @@ outsideTarget pipe dropdownId =
                                 { state
                                     | btColumns = False
                                     , btPagination = False
+                                    , btSubColumns = False
                                 }
 
                 else

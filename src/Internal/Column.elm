@@ -26,6 +26,7 @@ type Column a msg
     = Column
         { name : String
         , abbrev : String
+        , field : String
         , class : String
         , width : String
         , sortable : Maybe (a -> a -> Order)
@@ -88,11 +89,12 @@ withClass name (Column col) =
     Column { col | class = name }
 
 
-default : String -> String -> ViewCell a msg -> Column a msg
-default name abbrev view =
+default : String -> String -> String -> ViewCell a msg -> Column a msg
+default name abbrev field view =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = ""
         , sortable = Nothing
@@ -105,11 +107,12 @@ default name abbrev view =
         }
 
 
-int : (a -> Int) -> String -> String -> Column a msg
-int get name abbrev =
+int : (a -> Int) -> String -> String -> String -> Column a msg
+int get name abbrev field =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -122,11 +125,12 @@ int get name abbrev =
         }
 
 
-string : (a -> String) -> String -> String -> Column a msg
-string get name abbrev =
+string : (a -> String) -> String -> String -> String -> Column a msg
+string get name abbrev field =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -139,11 +143,12 @@ string get name abbrev =
         }
 
 
-bool : (a -> Bool) -> String -> String -> Column a msg
-bool get name abbrev =
+bool : (a -> Bool) -> String -> String -> String -> Column a msg
+bool get name abbrev field =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = "text-xl"
         , sortable = Nothing
@@ -156,11 +161,12 @@ bool get name abbrev =
         }
 
 
-float : (a -> Float) -> String -> String -> Column a msg
-float get name abbrev =
+float : (a -> Float) -> String -> String -> String -> Column a msg
+float get name abbrev field =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -173,11 +179,12 @@ float get name abbrev =
         }
 
 
-clipboard : (a -> String) -> String -> String -> Column a msg
-clipboard get name abbrev =
+clipboard : (a -> String) -> String -> String -> String -> Column a msg
+clipboard get name abbrev field =
     Column
         { name = name
         , abbrev = abbrev
+        , field = field
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -195,6 +202,7 @@ expand pipe lens getID =
     Column
         { name = ""
         , abbrev = ""
+        , field = ""
         , width = "30px"
         , class = "px-2"
         , sortable = Nothing
@@ -212,6 +220,7 @@ subtable isDisable pipe lens getID =
     Column
         { name = ""
         , abbrev = ""
+        , field = ""
         , width = "30px"
         , class = "px-2"
         , sortable = Nothing
@@ -284,7 +293,7 @@ viewHeader (Column col) ( state, pipe ) =
         (span [] [ text col.name ])
         (abbr [ title col.name ] [ text col.abbrev ])
     , iff (col.sortable /= Nothing)
-        (iff (state.orderBy == Just col.name)
+        (iff (state.orderBy == Just col.field)
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
                 , onClick <| pipe <| \s -> { s | order = next s.order }
@@ -303,7 +312,7 @@ viewHeader (Column col) ( state, pipe ) =
             )
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-                , onClick <| pipe <| \s -> { s | order = Ascending, orderBy = Just col.name }
+                , onClick <| pipe <| \s -> { s | order = Ascending, orderBy = Just col.field }
                 ]
                 [ text "⇅" ]
             )

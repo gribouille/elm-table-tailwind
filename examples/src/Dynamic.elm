@@ -72,11 +72,11 @@ config =
         OnTableRefresh
         OnTableInternal
         (String.fromInt << .id)
-        [ Column.int .id "ID" "" |> Column.withWidth "10px"
-        , Column.string .firstname "Firstname" ""
-        , Column.string .lastname "Lastname" ""
-        , Column.string .email "Email" ""
-        , Column.string .avatar "Avatar" "" |> Column.withView (\v _ -> [ img [ src v.avatar ] [] ])
+        [ Column.int .id "ID" "" ""|> Column.withWidth "10px"
+        , Column.string .firstname "Firstname" "" ""
+        , Column.string .lastname "Lastname" "" ""
+        , Column.string .email "Email" "" ""
+        , Column.string .avatar "Avatar" "" "" |> Column.withView (\v _ -> [ img [ src v.avatar ] [] ])
         ]
         |> Config.withSelectionExclusive
         |> Config.withPagination [ 5, 10, 20, 50 ] 10

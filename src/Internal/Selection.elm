@@ -23,6 +23,7 @@ selectionParent pipe config rows =
     Column
         { name = ""
         , abbrev = ""
+        , field = ""
         , width = "37px"
         , class = "col-selection"
         , sortable = Nothing
@@ -85,10 +86,7 @@ logicParentHeader (Config cfg) rows state check =
             lensTableSelected.set selected state
 
 
-
--- selectAll : Bool -> { a | getID : b -> c } -> (d -> List b) -> State -> List (Row d) -> List RowID -> State
-
-
+selectAll : Bool -> ConfTable b msg -> (a -> List b) -> State -> List (Row a) -> List RowID -> State
 selectAll check conf getValues state rows selected =
     let
         subselected =
@@ -182,6 +180,7 @@ selectionChild pipe config rows id =
     Column
         { name = ""
         , abbrev = ""
+        , field = ""
         , width = "37px"
         , class = "col-selection"
         , sortable = Nothing

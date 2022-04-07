@@ -117,34 +117,34 @@ withClass =
 
 {-| Create an agnostic column with a rendering function.
 -}
-default : String -> String -> ViewCell a msg -> Column a msg
+default : String -> String -> String -> ViewCell a msg -> Column a msg
 default =
     Internal.Column.default
 
 
 {-| Create an column for integers.
 -}
-int : (a -> Int) -> String -> String -> Column a msg
+int : (a -> Int) -> String -> String -> String -> Column a msg
 int =
     Internal.Column.int
 
 
 {-| Create a column for strings.
 -}
-string : (a -> String) -> String -> String -> Column a msg
+string : (a -> String) -> String -> String -> String -> Column a msg
 string =
     Internal.Column.string
 
 
 {-| Create a column for booleans.
 -}
-bool : (a -> Bool) -> String -> String -> Column a msg
+bool : (a -> Bool) -> String -> String -> String -> Column a msg
 bool =
     Internal.Column.bool
 
 
 {-| Create a column for floats.
 -}
-float : (a -> Float) -> String -> String -> Column a msg
+float : (a -> Float) -> String -> String -> String -> Column a msg
 float =
     Internal.Column.float

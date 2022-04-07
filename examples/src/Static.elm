@@ -49,10 +49,10 @@ config =
     Table.static
         OnTable
         (String.fromInt << .id)
-        [ Column.int .id "ID" ""
-        , Column.string .firstname "Firstname" ""
-        , Column.string .lastname "Lastname" ""
-        , Column.int .age "Age" ""
+        [ Column.int .id "ID" "" ""
+        , Column.string .firstname "Firstname" "" ""
+        , Column.string .lastname "Lastname" "" ""
+        , Column.int .age "Age" "" ""
         ]
         |> Config.withPagination [ 5, 10, 20, 50 ] 10
 
