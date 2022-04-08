@@ -45,6 +45,7 @@ See the documentation [here](http://package.elm-lang.org/packages/gribouille/elm
 - [ ] pagination for subtable
 - [ ] dynamic subtable data
 - [ ] documentation
+- [x] sort subtable
 
 
 ## Contributing

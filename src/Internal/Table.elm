@@ -12,6 +12,7 @@ import Internal.Selection exposing (..)
 import Internal.State exposing (..)
 import Internal.Toolbar
 import Internal.Util exposing (..)
+import Monocle.Lens exposing (Lens)
 import Svg as S
 import Svg.Attributes as SA
 import Table.Types exposing (..)
@@ -40,9 +41,7 @@ init (Config cfg) =
     in
     Model
         { state =
-            { orderBy = Nothing
-            , order = Ascending
-            , page = 0
+            { page = 0
             , byPage =
                 case cfg.pagination of
                     ByPage { initial } ->
@@ -57,8 +56,8 @@ init (Config cfg) =
             , btPagination = False
             , btColumns = False
             , btSubColumns = False
-            , table = StateTable visibleColumns [] [] []
-            , subtable = StateTable visibleSubColumns [] [] []
+            , table = StateTable visibleColumns [] [] [] Nothing Ascending
+            , subtable = StateTable visibleSubColumns [] [] [] Nothing Ascending
             }
         , rows = Rows Loading
         }
@@ -205,7 +204,7 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
 
         -- sort by columns
         srows =
-            iff (cfg.type_ == Static) (sort cfg.table.columns state rows) rows
+            iff (cfg.type_ == Static) (sort cfg.table.columns state.table rows) rows
 
         -- filter by search
         filter =
@@ -243,30 +242,31 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
             iff (cfg.type_ == Static && cfg.pagination /= None) (cut frows) frows
     in
     table [ class "w-full text-sm text-left text-gray-600" ]
-        [ tableContentHead (cfg.selection /= Disable) pipeExt pipeInt columns state
+        [ tableContentHead lensTable (cfg.selection /= Disable) pipeExt pipeInt columns state
         , tableContentBody config pipeExt pipeInt columns state prows
         ]
 
 
 tableContentHead :
-    Bool
+    Lens State StateTable
+    -> Bool
     -> Pipe msg
     -> Pipe msg
     -> List (Column a msg)
     -> State
     -> Html msg
-tableContentHead hasSelection pipeExt pipeInt columns state =
+tableContentHead lens hasSelection pipeExt pipeInt columns state =
     thead [ class "text-xs text-gray-700 uppercase bg-gray-50" ]
         [ tr [] <|
             List.indexedMap
                 (\i ((Column c) as col) ->
                     if i == 0 && hasSelection then
                         th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                            c.viewHeader col ( state, pipeInt )
+                            c.viewHeader col ( state, lens, pipeInt )
 
                     else
                         th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                            c.viewHeader col ( state, pipeExt )
+                            c.viewHeader col ( state, lens, pipeExt )
                 )
                 columns
         ]
@@ -343,7 +343,7 @@ subtableContent ((Config cfg) as config) pipeExt pipeInt parent subConfig state 
             ifMaybe (subConfig.expand /= Nothing) (expand pipeInt lensTable subConfig.getID)
 
         rows =
-            List.map Row data
+            sort subConfig.columns state.subtable <| List.map Row data
 
         selectColumn =
             ifMaybe (cfg.selection /= Disable) (selectionChild pipeInt config rows parent)
@@ -360,7 +360,7 @@ subtableContent ((Config cfg) as config) pipeExt pipeInt parent subConfig state 
     in
     div [ class "relative overflow-x-auto shadow-md sm:rounded-lg" ]
         [ table [ class "w-full text-sm text-left text-gray-500" ]
-            [ tableContentHead (cfg.selection /= Disable) pipeInt pipeExt columns state
+            [ tableContentHead lensSubTable (cfg.selection /= Disable) pipeInt pipeExt columns state
             , subtableContentBody pipeExt subConfig columns state rows
             ]
         ]
@@ -423,7 +423,7 @@ tableFooter (Config cfg) pipeInt pipeExt state total =
 --
 
 
-sort : List (Column a msg) -> State -> List (Row a) -> List (Row a)
+sort : List (Column a msg) -> StateTable -> List (Row a) -> List (Row a)
 sort columns state rows =
     let
         compFn =

@@ -22,10 +22,8 @@ type alias Pagination =
 
 
 type alias State =
-    { orderBy : Maybe String
-    , order : Sort
-    , page : Int
-    , byPage : Int
+    { page : Int -- TODO: move to StateTable
+    , byPage : Int -- TODO: move to StateTable
     , search : String
     , btPagination : Bool
     , btColumns : Bool
@@ -40,6 +38,8 @@ type alias StateTable =
     , selected : List RowID
     , expanded : List RowID
     , subtable : List RowID
+    , orderBy : Maybe String
+    , order : Sort
     }
 
 
@@ -84,7 +84,7 @@ next status =
 pagination : State -> Pagination
 pagination state =
     Pagination state.search
-        (Maybe.withDefault "" state.orderBy)
-        state.order
+        (Maybe.withDefault "" state.table.orderBy)
+        state.table.order
         state.page
         state.byPage

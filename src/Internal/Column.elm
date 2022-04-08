@@ -19,7 +19,7 @@ type alias ViewCell a msg =
 
 
 type alias ViewHeader a msg =
-    Column a msg -> ( State, Pipe msg ) -> List (Html msg)
+    Column a msg -> ( State, Lens State StateTable, Pipe msg ) -> List (Html msg)
 
 
 type Column a msg
@@ -287,19 +287,26 @@ viewSubtable isDisable lens getID v ( state, pipe ) =
         ]
 
 
-viewHeader : Column a msg -> ( State, Pipe msg ) -> List (Html msg)
-viewHeader (Column col) ( state, pipe ) =
+viewHeader : Column a msg -> ( State, Lens State StateTable, Pipe msg ) -> List (Html msg)
+viewHeader (Column col) ( state, lens, pipe ) =
     [ iff (String.isEmpty col.abbrev)
         (span [] [ text col.name ])
         (abbr [ title col.name ] [ text col.abbrev ])
     , iff (col.sortable /= Nothing)
-        (iff (state.orderBy == Just col.field)
+        (iff ((lens.get state).orderBy == Just col.field)
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-                , onClick <| pipe <| \s -> { s | order = next s.order }
+                , onClick <|
+                    pipe <|
+                        \s ->
+                            let
+                                st =
+                                    lens.get s
+                            in
+                            lens.set { st | order = next st.order } s
                 ]
                 [ text <|
-                    case state.order of
+                    case (lens.get state).order of
                         Ascending ->
                             "↿"
 
@@ -312,7 +319,14 @@ viewHeader (Column col) ( state, pipe ) =
             )
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-                , onClick <| pipe <| \s -> { s | order = Ascending, orderBy = Just col.field }
+                , onClick <|
+                    pipe <|
+                        \s ->
+                            let
+                                st =
+                                    lens.get s
+                            in
+                            lens.set { st | order = Ascending, orderBy = Just col.field } s
                 ]
                 [ text "⇅" ]
             )

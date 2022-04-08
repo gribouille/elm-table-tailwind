@@ -31,7 +31,7 @@ selectionParent pipe config rows =
         , visible = True
         , hiddable = False
         , viewCell = \v ( s, _ ) -> viewParentCell config rows v ( s, pipe )
-        , viewHeader = \c ( s, _ ) -> viewParentHeader config rows c ( s, pipe )
+        , viewHeader = \c ( s, _, _ ) -> viewParentHeader config rows c ( s, pipe )
         , default = True
         }
 
@@ -151,10 +151,7 @@ logicParentCell (Config cfg) _ value state check =
             state |> lensTableSelected.set updatedSelected
 
 
-
--- linkedState : { a | getID : b -> c } -> (d -> List b) -> d -> List RowID -> List RowID -> Bool -> State -> State
-
-
+linkedState : ConfTable b msg -> (a -> List b) -> a -> List RowID -> List RowID -> Bool -> State -> State
 linkedState conf getValues value subSelected updatedSelected check state =
     let
         children =
@@ -188,7 +185,7 @@ selectionChild pipe config rows id =
         , visible = True
         , hiddable = False
         , viewCell = \v ( s, _ ) -> viewChildCell config rows id v ( s, pipe )
-        , viewHeader = \c ( s, _ ) -> viewChildHeader config rows id c ( s, pipe )
+        , viewHeader = \c ( s, _, _ ) -> viewChildHeader config rows id c ( s, pipe )
         , default = True
         }
 
