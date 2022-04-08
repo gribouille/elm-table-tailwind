@@ -44,6 +44,7 @@ See the documentation [here](http://package.elm-lang.org/packages/gribouille/elm
 - [ ] _load more_ pagination
 - [ ] pagination for subtable
 - [ ] dynamic subtable data
+- [ ] documentation
 
 
 ## Contributing

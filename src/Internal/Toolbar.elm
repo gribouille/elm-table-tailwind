@@ -49,7 +49,7 @@ toolbarMenuPagination pipeExt pipeInt state capabilities =
                     []
                     [ a
                         [ class "block py-2 px-4 hover:bg-gray-100 hover:cursor-pointer"
-                        , onClick (pipeExt <| \s -> { s | byPage = i })
+                        , onClick (pipeExt <| \s -> { s | byPage = i, page = iff (i /= s.byPage) 0 s.page })
                         ]
                         [ text (String.fromInt i)
                         , iff (i == state.byPage)
