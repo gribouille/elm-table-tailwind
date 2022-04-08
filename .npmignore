@@ -1,3 +1,5 @@
+examples
+
 # Logs
 logs
 *.log
@@ -115,5 +117,3 @@ elm-stuff/
 repl-temp-*
 
 elm.js
-
-test.data
