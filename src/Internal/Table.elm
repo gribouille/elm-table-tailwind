@@ -114,7 +114,7 @@ headerSearch : Pipe msg -> Pipe msg -> List (Html msg)
 headerSearch pipeExt pipeInt =
     [ label [ for "elm-table-tailwind-search", class "sr-only" ] [ text "Search" ]
     , div [ class "relative" ]
-        [ div [ class "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none" ]
+        [ div [ class "absolute inset-y-0 right-0 flex items-center mr-3 pointer-events-none" ]
             [ search
             ]
         , input
