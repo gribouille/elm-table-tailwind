@@ -241,7 +241,7 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
         prows =
             iff (cfg.type_ == Static && cfg.pagination /= None) (cut frows) frows
     in
-    table [ class "w-full text-sm text-left text-gray-600" ]
+    table [ class "table-auto w-full text-sm text-left text-gray-600" ]
         [ tableContentHead lensTable (cfg.selection /= Disable) pipeExt pipeInt columns state
         , tableContentBody config pipeExt pipeInt columns state prows
         ]
