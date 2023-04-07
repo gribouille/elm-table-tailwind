@@ -1,6 +1,6 @@
 module Internal.Config exposing (..)
 
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, i, text)
 import Html.Attributes exposing (class)
 import Internal.Column exposing (..)
 import Internal.Data exposing (..)
@@ -169,7 +169,9 @@ withSubtable getValues getID columns expand (Config c) =
 
 errorView : String -> Html msg
 errorView msg =
-    div [ class "table-data-error" ] [ text msg ]
+    div [ class "m-6 bg-red-100 text-red-700 p-6 border-t-2 border-b-2 border-red-700" ]
+        [ text msg
+        ]
 
 
 pipeInternal : Config a b msg -> Model a -> Pipe msg
