@@ -116,7 +116,8 @@ update msg model =
             ( m, Cmd.none )
 
         OnData (Ok res) ->
-            ( model |> Table.loadedDynamic res.data (res.totalPages * res.perPage), Cmd.none )
+            -- ( model |> Table.loadedDynamic res.data (res.totalPages * res.perPage), Cmd.none )
+            ( model |> Table.loading, Cmd.none )
 
         OnData (Err e) ->
             ( model, Cmd.none )

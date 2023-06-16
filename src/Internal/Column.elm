@@ -4,6 +4,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Internal.Data exposing (..)
+import Internal.Icon.Collapse as Collapse
+import Internal.Icon.Expand as Expand
+import Internal.Icon.Minus as Minus
+import Internal.Icon.Plus as Plus
 import Internal.State exposing (..)
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
@@ -253,15 +257,15 @@ viewExpand lens getID v ( state, pipe ) =
         , type_ "button"
         , onClick <| pipe <| \s -> lens.set { conf | expanded = updatedExpand } s
         ]
-        [ span [ class <| iff isExpanded "gg-collapse" "gg-expand" ] [] ]
+        [ iff isExpanded Collapse.view Expand.view ]
     ]
 
 
 viewSubtable : (a -> Bool) -> Lens State StateTable -> (a -> String) -> a -> ( State, Pipe msg ) -> List (Html msg)
 viewSubtable isDisable lens getID v ( state, pipe ) =
     if isDisable v then
-        [ a [ class "btn-subtable is-disabled", disabled True ]
-            [ span [ class "gg-plus" ] [] ]
+        [ a [ class <| "w-6 h-6 " ++ isDisabled, disabled True ]
+            [ Plus.view ]
         ]
 
     else
@@ -283,7 +287,7 @@ viewSubtable isDisable lens getID v ( state, pipe ) =
             , type_ "button"
             , onClick <| pipe <| \s -> lens.set { conf | subtable = updatedExpand } s
             ]
-            [ span [ class <| iff isExpanded "gg-minus" "gg-plus" ] [] ]
+            [ iff isExpanded Minus.view Plus.view ]
         ]
 
 

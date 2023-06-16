@@ -33,7 +33,7 @@ tableFooterContent type_ pipeInt pipeExt byPage page total =
                 [ ifh (nb > 1) <|
                     li []
                         [ a
-                            [ class <| "py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer" ++ iff (page == 0) " is-disabled" ""
+                            [ class <| "py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer " ++ iff (page == 0) isDisabled ""
                             , onClick <| pipe <| \state -> { state | page = state.page - 1 }
                             ]
                             [ text "Previous" ]
@@ -54,7 +54,7 @@ tableFooterContent type_ pipeInt pipeExt byPage page total =
                 , ifh (nb > 1) <|
                     li []
                         [ a
-                            [ class <| "py-2 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer" ++ iff (page == nb - 1) " is-disabled" ""
+                            [ class <| "py-2 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer" ++ iff (page == nb - 1) isDisabled ""
                             , onClick <| pipe <| \state -> { state | page = page + 1 }
                             ]
                             [ text "Next" ]

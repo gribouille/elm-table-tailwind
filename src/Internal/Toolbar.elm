@@ -6,9 +6,9 @@ import Html.Events exposing (onCheck, onClick)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
-import Internal.Icon.Column as Column
-import Internal.Icon.Page as Page
-import Internal.Icon.SubColumn as SubColumn
+import Internal.Icon.Grid as Grid
+import Internal.Icon.GridSmall as GridSmall
+import Internal.Icon.Layout as Layout
 import Internal.State exposing (..)
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
@@ -36,7 +36,7 @@ view (Config cfg) pipeExt pipeInt state =
 toolbarMenuPagination : Pipe msg -> Pipe msg -> State -> List Int -> Html msg
 toolbarMenuPagination pipeExt pipeInt state capabilities =
     toolbarMenuDropdown
-        Page.view
+        Layout.view
         "Pagination"
         (pipeInt <|
             \s ->
@@ -69,7 +69,7 @@ toolbarMenuPagination pipeExt pipeInt state capabilities =
 toolbarMenuColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
 toolbarMenuColumns columns pipeInt state =
     toolbarMenuDropdown
-        Column.view
+        Grid.view
         "Columns"
         (pipeInt <|
             \s ->
@@ -88,7 +88,7 @@ toolbarMenuColumns columns pipeInt state =
 toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
 toolbarMenuSubColumns columns pipeInt state =
     toolbarMenuDropdown
-        SubColumn.view
+        GridSmall.view
         "Columns of subtable"
         (pipeInt <|
             \s ->
@@ -154,7 +154,7 @@ toolbarMenuDropdown btn tt msg active items =
             , attribute "data-tippy-placement" "bottom"
             , class """text-gray-900 bg-white border border-gray-200 hover:bg-gray-100
                        hover:text-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300
-                       font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center
+                       font-medium rounded-lg text-sm flex justify-center items-center p-0.5
                        w-10 h-9
                     """
             ]

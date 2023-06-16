@@ -16,6 +16,7 @@ import Monocle.Lens exposing (Lens)
 import Svg as S
 import Svg.Attributes as SA
 import Table.Types exposing (..)
+import Internal.Icon.Spinner as Spinner
 
 
 
@@ -82,7 +83,7 @@ view config ((Model m) as model) =
         tableHeader config pipeExt pipeInt m.state
             :: (case m.rows of
                     Rows Loading ->
-                        [ div [ class "flex flex-col items-center my-11" ] [ span [ class "gg-spinner" ] [] ]
+                        [ div [ class "flex flex-col items-center my-11" ] [ Spinner.view ]
                         ]
 
                     Rows (Loaded { total, rows }) ->
