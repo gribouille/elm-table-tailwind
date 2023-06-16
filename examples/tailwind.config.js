@@ -3,7 +3,8 @@ const colors = require('tailwindcss/colors')
 module.exports = {
   content: [
     './src/**/*',
-    './styles/**/*'
+    '../src/**/*',
+    '../styles/**/*',
   ],
   theme: {
     extend: {},
@@ -13,5 +14,8 @@ module.exports = {
       current: 'currentColor'
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+  ],
 }
