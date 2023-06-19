@@ -7,6 +7,7 @@ import Html.Events exposing (onInput)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
+import Internal.Icon.Spinner as Spinner
 import Internal.Pagination exposing (..)
 import Internal.Selection exposing (..)
 import Internal.State exposing (..)
@@ -16,7 +17,6 @@ import Monocle.Lens exposing (Lens)
 import Svg as S
 import Svg.Attributes as SA
 import Table.Types exposing (..)
-import Internal.Icon.Spinner as Spinner
 
 
 
@@ -79,7 +79,7 @@ view config ((Model m) as model) =
         pipeExt =
             pipeExternal config model
     in
-    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full" ] <|
+    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full p-1" ] <|
         tableHeader config pipeExt pipeInt m.state
             :: (case m.rows of
                     Rows Loading ->
