@@ -3,29 +3,28 @@
 Full features ELM table component for Tailwind.
 
 ## TODO
-- [ ] JS API
-- [x] _load more_ pagination
-- [x] remove specific style
-- [ ] pagination for subtable
-- [ ] dynamic subtable data
-- [ ] documentation (more example)
+
+- [x] feat: _load more_ pagination
+- [x] refact: remove specific style
+- [ ] feat: pagination for subtable
+- [ ] feat: dynamic subtable data
+- [ ] misc: documentation (more example)
 - [x] sort subtable
-- [ ] more explicit parameter
-- [ ] generic view: merge elm-table-tailwind and elm-table
-- [ ] remove static/dynamic table
+- [ ] refact (v4): more explicit parameter
+- [ ] refact (v4): generic view
+- [ ] refact (v4): merge elm-table-tailwind and elm-table
+- [ ] refact (v4): remove static/dynamic table
+- [ ] feat: infinite scroll
+- [ ] feat: iterop: JS API
 
 
 ## Usage
 
-Install the ELM package and the NPM package for the styles:
+Install the ELM package:
 
 ```
 > elm install gribouille/elm-table-tailwind
-> npm install elm-table-tailwind
 ```
-
-Include the CSS styles from `node_modules/elm-table-tailwind/style.css`.
-
 
 ## Examples
 
@@ -38,11 +37,6 @@ To start the examples in dev mode:
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-
-To build the examples:
-```
-npm run dist
-```
 
 
 ## Documentation
