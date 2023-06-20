@@ -6,9 +6,13 @@ import Html.Events exposing (onCheck, onClick)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
+import Internal.Icon.Grid as Grid
+import Internal.Icon.GridSmall as GridSmall
+import Internal.Icon.Layout as Layout
 import Internal.State exposing (..)
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
+import Svg exposing (Svg)
 
 
 view : Config a b msg -> Pipe msg -> Pipe msg -> State -> List (Html msg)
@@ -32,7 +36,7 @@ view (Config cfg) pipeExt pipeInt state =
 toolbarMenuPagination : Pipe msg -> Pipe msg -> State -> List Int -> Html msg
 toolbarMenuPagination pipeExt pipeInt state capabilities =
     toolbarMenuDropdown
-        "gg-stories"
+        Layout.view
         "Pagination"
         (pipeInt <|
             \s ->
@@ -65,7 +69,7 @@ toolbarMenuPagination pipeExt pipeInt state capabilities =
 toolbarMenuColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
 toolbarMenuColumns columns pipeInt state =
     toolbarMenuDropdown
-        "gg-menu-grid-r"
+        Grid.view
         "Columns"
         (pipeInt <|
             \s ->
@@ -84,7 +88,7 @@ toolbarMenuColumns columns pipeInt state =
 toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
 toolbarMenuSubColumns columns pipeInt state =
     toolbarMenuDropdown
-        "gg-layout-grid-small"
+        GridSmall.view
         "Columns of subtable"
         (pipeInt <|
             \s ->
@@ -139,7 +143,7 @@ dropdownItem pipeInt state lens ( name, hiddable ) =
         Nothing
 
 
-toolbarMenuDropdown : String -> String -> msg -> Bool -> List (Html msg) -> Html msg
+toolbarMenuDropdown : Svg msg -> String -> msg -> Bool -> List (Html msg) -> Html msg
 toolbarMenuDropdown btn tt msg active items =
     div [ class "relative", id "dropdown" ]
         [ button
@@ -148,9 +152,13 @@ toolbarMenuDropdown btn tt msg active items =
             , attribute "tooltip" tt
             , attribute "data-tippy-content" tt
             , attribute "data-tippy-placement" "bottom"
-            , class "text-gray-900 bg-white border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 text-center inline-flex items-center h-[38px] w-[46px]"
+            , class """text-gray-900 bg-white border border-gray-200 hover:bg-gray-100
+                       hover:text-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300
+                       font-medium rounded-lg text-sm flex justify-center items-center p-0.5
+                       w-10 h-9
+                    """
             ]
-            [ i [ class btn ] [] ]
+            [ btn ]
         , div
             [ class <| "z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow origin-top-right absolute right-0" ++ iff active "" " hidden"
             ]

@@ -7,6 +7,7 @@ import Html.Events exposing (onInput)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
+import Internal.Icon.Spinner as Spinner
 import Internal.Pagination exposing (..)
 import Internal.Selection exposing (..)
 import Internal.State exposing (..)
@@ -52,6 +53,7 @@ init (Config cfg) =
 
                     _ ->
                         0
+            , progressive = False
             , search = ""
             , btPagination = False
             , btColumns = False
@@ -78,11 +80,11 @@ view config ((Model m) as model) =
         pipeExt =
             pipeExternal config model
     in
-    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full" ] <|
+    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full p-1" ] <|
         tableHeader config pipeExt pipeInt m.state
             :: (case m.rows of
                     Rows Loading ->
-                        [ div [ class "flex flex-col items-center my-11" ] [ span [ class "gg-spinner" ] [] ]
+                        [ div [ class "flex flex-col items-center my-11" ] [ Spinner.view ]
                         ]
 
                     Rows (Loaded { total, rows }) ->
@@ -410,11 +412,15 @@ subtableContentBodyRow pipeExt cfg columns state (Row r) =
 
 tableFooter : Config a b msg -> Pipe msg -> Pipe msg -> State -> Int -> Html msg
 tableFooter (Config cfg) pipeInt pipeExt state total =
-    if cfg.pagination == None then
-        text ""
+    case cfg.pagination of
+        ByPage _ ->
+            tableFooterPage cfg.type_ pipeInt pipeExt state.byPage state.page total
 
-    else
-        tableFooterContent cfg.type_ pipeInt pipeExt state.byPage state.page total
+        Progressive { step } ->
+            tableFooterProgressive (iff (cfg.type_ == Static) pipeInt pipeExt) state.progressive state.byPage step total
+
+        None ->
+            text ""
 
 
 

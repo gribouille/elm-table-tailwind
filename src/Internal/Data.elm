@@ -1,6 +1,6 @@
 module Internal.Data exposing (..)
 
-import Internal.State exposing (Pagination, RowID, State)
+import Internal.State exposing (Pagination, RowID, State, lensProgressive)
 import Monocle.Lens exposing (Lens)
 import Table.Types exposing (..)
 
@@ -31,7 +31,11 @@ type Rows a
 
 loaded : Model a -> List a -> Int -> Model a
 loaded (Model model) rows n =
-    Model { model | rows = Rows <| Loaded { total = n, rows = List.map Row rows } }
+    Model
+        { model
+            | rows = Rows <| Loaded { total = n, rows = List.map Row rows }
+            , state = lensProgressive.set False model.state
+        }
 
 
 loading : Model a -> Model a
@@ -41,7 +45,16 @@ loading (Model model) =
 
 failed : Model a -> String -> Model a
 failed (Model model) msg =
-    Model { model | rows = Rows <| Failed msg }
+    Model
+        { model
+            | rows = Rows <| Failed msg
+            , state = lensProgressive.set False model.state
+        }
+
+
+progressive : Model a -> Model a
+progressive (Model model) =
+    Model { model | state = lensProgressive.set True model.state }
 
 
 pagination : Model a -> Pagination
@@ -57,6 +70,16 @@ getState (Model { state }) =
 getRows : Model a -> Rows a
 getRows (Model { rows }) =
     rows
+
+
+getItems : Rows a -> List a
+getItems (Rows s) =
+    case s of
+        Loaded { rows } ->
+            List.map (\(Row x) -> x) rows
+
+        _ ->
+            []
 
 
 stateLens : Lens (Model a) State

@@ -24,6 +24,7 @@ type alias Pagination =
 type alias State =
     { page : Int -- TODO: move to StateTable
     , byPage : Int -- TODO: move to StateTable
+    , progressive : Bool
     , search : String
     , btPagination : Bool
     , btColumns : Bool
@@ -56,6 +57,11 @@ subSelected state =
 lensSelected : Lens StateTable (List RowID)
 lensSelected =
     Lens .selected (\b a -> { a | selected = b })
+
+
+lensProgressive : Lens State Bool
+lensProgressive =
+    Lens .progressive (\b a -> { a | progressive = b })
 
 
 lensTable : Lens State StateTable

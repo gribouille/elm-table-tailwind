@@ -1,6 +1,6 @@
 module Table exposing
-    ( Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed
-    , Pipe, State, Pagination, pagination, selected, subSelected
+    ( Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed, progressive
+    , Pipe, State, Pagination, pagination, selected, subSelected, get
     , Config, Column, static, dynamic
     , view, subscriptions
     )
@@ -10,12 +10,12 @@ module Table exposing
 
 # Data
 
-@docs Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed
+@docs Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed, progressive
 
 
 # State
 
-@docs Pipe, State, Pagination, pagination, selected, subSelected
+@docs Pipe, State, Pagination, pagination, selected, subSelected, get
 
 
 # Configuration
@@ -107,6 +107,13 @@ init =
     Internal.Table.init
 
 
+{-| Get the data from the model.
+-}
+get : Model a -> List a
+get =
+    Internal.Data.getItems << Internal.Data.getRows
+
+
 {-| Load the data in the model with the total number of rows if the data are
 incomplete.
 -}
@@ -142,6 +149,13 @@ loading =
 failed : Model a -> String -> Model a
 failed =
     Internal.Data.failed
+
+
+{-| Data loading is in progress for the progressive loading mode.
+-}
+progressive : Model a -> Model a
+progressive =
+    Internal.Data.progressive
 
 
 {-| Get the pagination values from model.

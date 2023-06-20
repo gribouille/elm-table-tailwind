@@ -2,6 +2,18 @@
 
 Full features ELM table component for Tailwind.
 
+## TODO
+- [ ] JS API
+- [x] _load more_ pagination
+- [x] remove specific style
+- [ ] pagination for subtable
+- [ ] dynamic subtable data
+- [ ] documentation (more example)
+- [x] sort subtable
+- [ ] more explicit parameter
+- [ ] generic view: merge elm-table-tailwind and elm-table
+- [ ] remove static/dynamic table
+
 
 ## Usage
 
@@ -36,16 +48,6 @@ npm run dist
 ## Documentation
 
 See the documentation [here](http://package.elm-lang.org/packages/gribouille/elm-table/latest).
-
-
-## Todo
-
-- [ ] JS API
-- [ ] _load more_ pagination
-- [ ] pagination for subtable
-- [ ] dynamic subtable data
-- [ ] documentation
-- [x] sort subtable
 
 
 ## Contributing

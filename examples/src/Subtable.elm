@@ -41,7 +41,6 @@ columnsPerson =
     , Column.string .name "name" "" ""
     , Column.string .gender "Gender" "" ""
     , Column.default "Age" "" ""
-        ""
         (\x _ ->
             [ case x.age of
                 Nothing ->
@@ -79,7 +78,7 @@ config s =
         .id
         columnsMovie
         |> Config.withSelection s
-        |> Config.withExpand (Column.string .description "Description" "")
+        |> Config.withExpand (Column.string .description "Description" "" "")
         |> Config.withPagination [ 5, 10, 20, 50 ] 10
         |> Config.withSubtable .people .id columnsPerson Nothing
         |> Config.withToolbar
