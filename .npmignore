@@ -117,3 +117,5 @@ elm-stuff/
 repl-temp-*
 
 elm.js
+
+.npmrc

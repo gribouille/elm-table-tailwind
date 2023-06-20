@@ -2,7 +2,7 @@ module Internal.Icon.Minus exposing (..)
 
 import Html.Attributes exposing (attribute)
 import Svg exposing (..)
-import Svg.Attributes exposing (d, fill, height, viewBox, width)
+import Svg.Attributes exposing (d, fill, viewBox)
 
 
 view : Svg msg

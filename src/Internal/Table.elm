@@ -53,6 +53,7 @@ init (Config cfg) =
 
                     _ ->
                         0
+            , progressive = False
             , search = ""
             , btPagination = False
             , btColumns = False
@@ -411,11 +412,15 @@ subtableContentBodyRow pipeExt cfg columns state (Row r) =
 
 tableFooter : Config a b msg -> Pipe msg -> Pipe msg -> State -> Int -> Html msg
 tableFooter (Config cfg) pipeInt pipeExt state total =
-    if cfg.pagination == None then
-        text ""
+    case cfg.pagination of
+        ByPage _ ->
+            tableFooterPage cfg.type_ pipeInt pipeExt state.byPage state.page total
 
-    else
-        tableFooterContent cfg.type_ pipeInt pipeExt state.byPage state.page total
+        Progressive { step } ->
+            tableFooterProgressive (iff (cfg.type_ == Static) pipeInt pipeExt) state.progressive state.byPage step total
+
+        None ->
+            text ""
 
 
 

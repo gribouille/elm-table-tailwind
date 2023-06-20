@@ -1,6 +1,6 @@
 module Internal.Config exposing (..)
 
-import Html exposing (Html, div, i, text)
+import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 import Internal.Column exposing (..)
 import Internal.Data exposing (..)
@@ -10,7 +10,7 @@ import Table.Types exposing (..)
 
 type Pagination
     = ByPage { capabilities : List Int, initial : Int }
-    | Progressive { initial : Int, step : Int } -- TODO: no implemented
+    | Progressive { initial : Int, step : Int }
     | None
 
 
@@ -131,8 +131,8 @@ withPagination capabilities initial (Config c) =
     Config { c | pagination = ByPage { capabilities = capabilities, initial = initial } }
 
 
-withProgressiveLoading : Int -> Int -> Config a b msg -> Config a b msg
-withProgressiveLoading initial step (Config c) =
+withProgressive : Int -> Int -> Config a b msg -> Config a b msg
+withProgressive initial step (Config c) =
     Config { c | pagination = Progressive { initial = initial, step = step } }
 
 

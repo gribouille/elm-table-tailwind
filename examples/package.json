@@ -2,7 +2,8 @@
   "name": "examples",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite --host '0.0.0.0' --port 3000"
+    "dev": "vite --host '0.0.0.0' --port 3000",
+    "server": "PORT=4000 deno run --allow-net --allow-env --allow-read --watch server.ts"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",

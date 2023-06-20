@@ -1,6 +1,6 @@
 {
   "name": "elm-table-tailwind",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Full features ELM table component for Tailwind",
   "repository": {
     "type": "git",
@@ -18,13 +18,8 @@
     "url": "https://github.com/gribouille/elm-table-tailwind/issues"
   },
   "homepage": "https://github.com/gribouille/elm-table-tailwind#readme",
-  "main": "index.js",
   "directories": {
     "example": "examples"
-  },
-  "scripts": {
-    "dev": "npx tailwindcss -i ./styles/style.css -o ./style.css --watch",
-    "build": "npx tailwindcss -m -i ./styles/style.css -o ./style.css"
   },
   "devDependencies": {
     "elm": "^0.19.1-5",

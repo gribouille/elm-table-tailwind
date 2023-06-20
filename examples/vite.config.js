@@ -2,20 +2,18 @@ import { defineConfig } from 'vite'
 import elmPlugin from 'vite-plugin-elm'
 
 export default defineConfig({
-  // base: '',
+  base: '',
   plugins: [
     elmPlugin(),
   ],
   server: {
     proxy: {
-      '/api': {
-        target: 'https://reqres.in',
-        pathRewrite: {
-          '^/api': '/api'
-        },
+      '/api2': {
+        target: 'http://0.0.0.0:4000',
         changeOrigin: true,
-        secure: false
-      }
+        rewrite: (path) => path.replace(/^\/api2/, ''),
+      },
+      '/api': 'https://reqres.in'
     }
   }
 })

@@ -6,14 +6,34 @@ import Html.Events exposing (onClick)
 import Internal.Column exposing (Pipe)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
+import Internal.Icon.Spinner as Spinner
 import Internal.Selection exposing (..)
 import Internal.State exposing (..)
 import Internal.Util exposing (..)
 import Table.Types exposing (..)
 
 
-tableFooterContent : Type -> Pipe msg -> Pipe msg -> Int -> Int -> Int -> Html msg
-tableFooterContent type_ pipeInt pipeExt byPage page total =
+tableFooterProgressive : Pipe msg -> Bool -> Int -> Int -> Int -> Html msg
+tableFooterProgressive pipe isLoading byPage step total =
+    div [ class "my-5 w-full flex flex-col items-center" ]
+        [ case ( isLoading, byPage < total ) of
+            ( True, _ ) ->
+                Spinner.view
+
+            ( False, True ) ->
+                a
+                    [ class <| "text-base text-gray-400 bg-white rounded-r-lg hover:text-gray-700 hover:cursor-pointer"
+                    , onClick <| pipe <| \state -> { state | byPage = byPage + step }
+                    ]
+                    [ text <| "Show more (" ++ String.fromInt (total - byPage) ++ ") ..." ]
+
+            _ ->
+                text ""
+        ]
+
+
+tableFooterPage : Type -> Pipe msg -> Pipe msg -> Int -> Int -> Int -> Html msg
+tableFooterPage type_ pipeInt pipeExt byPage page total =
     let
         nb =
             ceiling (toFloat total / toFloat byPage)

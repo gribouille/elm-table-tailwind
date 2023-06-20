@@ -3,7 +3,7 @@ module Table.Config exposing
     , static, dynamic
     , withExpand, withSelection, withSelectionFree, withSelectionLinked
     , withSelectionLinkedStrict, withSelectionExclusive
-    , withSelectionExclusiveStrict, withPagination, withProgressiveLoading
+    , withSelectionExclusiveStrict, withPagination, withProgressive
     , withToolbar, withErrorView, withSubtable
     )
 
@@ -21,7 +21,7 @@ module Table.Config exposing
 
 @docs withExpand, withSelection, withSelectionFree, withSelectionLinked
 @docs withSelectionLinkedStrict, withSelectionExclusive
-@docs withSelectionExclusiveStrict, withPagination, withProgressiveLoading
+@docs withSelectionExclusiveStrict, withPagination, withProgressive
 @docs withToolbar, withErrorView, withSubtable
 
 -}
@@ -111,11 +111,11 @@ withPagination =
     Internal.Config.withPagination
 
 
-{-| Enable the progressive loading pagination (not implemented).
+{-| Enable the progressive loading pagination.
 -}
-withProgressiveLoading : Int -> Int -> Config a b msg -> Config a b msg
-withProgressiveLoading =
-    Internal.Config.withProgressiveLoading
+withProgressive : Int -> Int -> Config a b msg -> Config a b msg
+withProgressive =
+    Internal.Config.withProgressive
 
 
 {-| Add a custom toolbar.
