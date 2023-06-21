@@ -117,3 +117,5 @@ repl-temp-*
 elm.js
 
 test.data
+
+.npmrc

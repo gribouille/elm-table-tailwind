@@ -19,7 +19,7 @@ import Table.Types exposing (..)
 
 
 selectionParent : Pipe msg -> Config a b msg -> List (Row a) -> Column a msg
-selectionParent pipe config rows =
+selectionParent onSelectRow config rows =
     Column
         { name = ""
         , abbrev = ""
@@ -30,20 +30,19 @@ selectionParent pipe config rows =
         , searchable = Nothing
         , visible = True
         , hiddable = False
-        , viewCell = \v ( s, _ ) -> viewParentCell config rows v ( s, pipe )
-        , viewHeader = \c ( s, _, _ ) -> viewParentHeader config rows c ( s, pipe )
+        , viewCell = \v s -> viewParentCell config rows v ( s, onSelectRow )
         , default = True
         }
 
 
 viewParentHeader : Config a b msg -> List (Row a) -> Column a msg -> ( State, Pipe msg ) -> List (Html msg)
-viewParentHeader config rows _ ( state, pipe ) =
+viewParentHeader config rows _ ( state, onSelectColumn ) =
     [ div [ class "flex items-center" ]
         [ input
             [ class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             , type_ "checkbox"
             , id "checkbox-all"
-            , onCheck (\b -> pipe <| \s -> logicParentHeader config rows s b)
+            , onCheck (\b -> onSelectColumn <| \s -> logicParentHeader config rows s b)
             ]
             []
         , label [ for "checkbox-all", class "sr-only" ] [ text "checkbox" ]
@@ -52,13 +51,13 @@ viewParentHeader config rows _ ( state, pipe ) =
 
 
 viewParentCell : Config a b msg -> List (Row a) -> a -> ( State, Pipe msg ) -> List (Html msg)
-viewParentCell ((Config cfg) as config) rows value ( state, pipe ) =
+viewParentCell ((Config cfg) as config) rows value ( state, onSelectRow ) =
     [ div [ class "flex items-center" ]
         [ input
             [ class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             , type_ "checkbox"
             , checked (List.member (cfg.table.getID value) state.table.selected)
-            , onCheck (\b -> pipe <| \s -> logicParentCell config rows value s b)
+            , onCheck (\b -> onSelectRow <| \s -> logicParentCell config rows value s b)
             ]
             []
         , label [ class "sr-only" ] [ text "checkbox" ]
@@ -184,8 +183,7 @@ selectionChild pipe config rows id =
         , searchable = Nothing
         , visible = True
         , hiddable = False
-        , viewCell = \v ( s, _ ) -> viewChildCell config rows id v ( s, pipe )
-        , viewHeader = \c ( s, _, _ ) -> viewChildHeader config rows id c ( s, pipe )
+        , viewCell = \v s -> viewChildCell config rows id v ( s, pipe )
         , default = True
         }
 

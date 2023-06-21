@@ -11,7 +11,6 @@ import Table.Config as Config
 import Table.Types exposing (Selection(..))
 
 
-
 type alias Model =
     { selection : Selection
     , table : Table.Model Movie
@@ -40,7 +39,9 @@ columnsPerson =
     [ Column.string .id "ID" "" "" |> Column.withDefault False
     , Column.string .name "name" "" ""
     , Column.string .gender "Gender" "" ""
-    , Column.default "Age" "" ""
+    , Column.default "Age"
+        ""
+        ""
         (\x _ ->
             [ case x.age of
                 Nothing ->
@@ -57,7 +58,7 @@ columnsPerson =
 
 radio : String -> Selection -> Selection -> Html Msg
 radio n exp got =
-    div [ class "flex items-center mr-4"]
+    div [ class "flex items-center mr-4" ]
         [ input
             [ type_ "radio"
             , name "radio"
@@ -67,13 +68,13 @@ radio n exp got =
             ]
             []
         , label [ class "block ml-2 text-sm font-medium text-gray-900" ]
-            [ text n]
+            [ text n ]
         ]
 
 
 config : Selection -> Table.Config Movie Person Msg
 config s =
-    Table.static
+    Table.config
         OnTable
         .id
         columnsMovie
@@ -104,7 +105,7 @@ main =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { selection = Disable
-      , table = Table.init (config Disable) |> Table.loadedStatic movies
+      , table = Table.loaded (Table.init (config Disable)) movies (List.length movies)
       }
     , Cmd.none
     )

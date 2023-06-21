@@ -23,15 +23,15 @@ type Config a b msg
 
 
 type alias ConfigInternal a b msg =
-    { type_ : Type
-    , selection : Selection
-    , onChangeExt : Model a -> msg
-    , onChangeInt : Model a -> msg
+    { selection : Selection
+    , onExternal : Model a -> msg
+    , onInternal : Model a -> msg
     , table : ConfTable a msg
     , pagination : Pagination
     , subtable : Maybe (SubTable a b msg)
     , errorView : String -> Html msg
     , toolbar : List (Html msg)
+    , actions : List Action
     }
 
 
@@ -42,49 +42,28 @@ type alias ConfTable a msg =
     }
 
 
-config : Type -> Selection -> (Model a -> msg) -> (Model a -> msg) -> ConfTable a msg -> Config a () msg
-config t s oe oi c =
-    Config
-        { type_ = t
-        , selection = s
-        , onChangeExt = oe
-        , onChangeInt = oi
-        , table = c
-        , pagination = None
-        , subtable = Nothing
-        , errorView = errorView
-        , toolbar = []
-        }
+type alias Resolver msg =
+    Action -> Pipe msg
 
 
-static : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-static onChange getID columns =
+config : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
+config onInternal getID columns =
     Config
-        { type_ = Static
-        , selection = Disable
-        , onChangeExt = onChange
-        , onChangeInt = onChange
+        { selection = Disable
+        , onExternal = onInternal
+        , onInternal = onInternal
         , table = ConfTable columns getID Nothing
         , pagination = None
         , subtable = Nothing
         , errorView = errorView
         , toolbar = []
+        , actions = []
         }
 
 
-dynamic : (Model a -> msg) -> (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-dynamic onChangeExt onChangeInt getID columns =
-    Config
-        { type_ = Dynamic
-        , selection = Disable
-        , onChangeExt = onChangeExt
-        , onChangeInt = onChangeInt
-        , table = ConfTable columns getID Nothing
-        , pagination = None
-        , subtable = Nothing
-        , errorView = errorView
-        , toolbar = []
-        }
+withActions : (Model a -> msg) -> List Action -> Config a b msg -> Config a b msg
+withActions onExternal actions (Config c) =
+    Config { c | actions = actions, onExternal = onExternal }
 
 
 withExpand : Column a msg -> Config a b msg -> Config a b msg
@@ -155,30 +134,30 @@ withSubtable :
     -> Config a b msg
 withSubtable getValues getID columns expand (Config c) =
     Config
-        { type_ = c.type_
-        , selection = c.selection
-        , onChangeExt = c.onChangeExt
-        , onChangeInt = c.onChangeInt
+        { selection = c.selection
+        , onExternal = c.onExternal
+        , onInternal = c.onInternal
         , table = c.table
         , pagination = c.pagination
         , subtable = Just <| SubTable getValues { columns = columns, getID = getID, expand = expand }
         , errorView = c.errorView
         , toolbar = c.toolbar
+        , actions = c.actions
         }
 
 
 errorView : String -> Html msg
 errorView msg =
+    -- TODO: move
     div [ class "m-6 bg-red-100 text-red-700 p-6 border-t-2 border-b-2 border-red-700" ]
         [ text msg
         ]
 
 
-pipeInternal : Config a b msg -> Model a -> Pipe msg
-pipeInternal (Config { onChangeInt }) (Model { rows, state }) fn =
-    onChangeInt <| Model { rows = rows, state = fn state }
+resolve : Config a b msg -> Model a -> Action -> Pipe msg
+resolve (Config c) (Model m) a fn =
+    if List.member a c.actions then
+        c.onExternal <| Model { rows = m.rows, state = fn m.state }
 
-
-pipeExternal : Config a b msg -> Model a -> Pipe msg
-pipeExternal (Config { onChangeExt }) (Model { rows, state }) fn =
-    onChangeExt <| Model { rows = rows, state = fn state }
+    else
+        c.onInternal <| Model { rows = m.rows, state = fn m.state }

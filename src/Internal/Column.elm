@@ -19,11 +19,11 @@ type alias Pipe msg =
 
 
 type alias ViewCell a msg =
-    a -> ( State, Pipe msg ) -> List (Html msg)
+    a -> State -> List (Html msg)
 
 
 type alias ViewHeader a msg =
-    Column a msg -> ( State, Lens State StateTable, Pipe msg ) -> List (Html msg)
+    Column a msg -> State -> List (Html msg)
 
 
 type Column a msg
@@ -38,7 +38,6 @@ type Column a msg
         , searchable : Maybe (a -> String)
         , visible : Bool
         , viewCell : ViewCell a msg
-        , viewHeader : ViewHeader a msg
         , default : Bool
         }
 
@@ -83,11 +82,6 @@ withView view (Column col) =
     Column { col | viewCell = view }
 
 
-withHeaderView : ViewHeader a msg -> Column a msg -> Column a msg
-withHeaderView view (Column col) =
-    Column { col | viewHeader = view }
-
-
 withClass : String -> Column a msg -> Column a msg
 withClass name (Column col) =
     Column { col | class = name }
@@ -106,7 +100,6 @@ default name abbrev field view =
         , searchable = Nothing
         , visible = True
         , viewCell = view
-        , viewHeader = viewHeader
         , default = True
         }
 
@@ -124,7 +117,6 @@ int get name abbrev field =
         , visible = True
         , hiddable = True
         , viewCell = \x _ -> [ text <| String.fromInt (get x) ]
-        , viewHeader = viewHeader
         , default = True
         }
 
@@ -142,7 +134,6 @@ string get name abbrev field =
         , visible = True
         , hiddable = True
         , viewCell = \x _ -> [ text (get x) ]
-        , viewHeader = viewHeader
         , default = True
         }
 
@@ -160,7 +151,6 @@ bool get name abbrev field =
         , visible = True
         , hiddable = True
         , viewCell = \x _ -> [ text <| iff (get x) "☑" "☐" ]
-        , viewHeader = viewHeader
         , default = True
         }
 
@@ -178,31 +168,12 @@ float get name abbrev field =
         , visible = True
         , hiddable = True
         , viewCell = \x _ -> [ text <| String.fromFloat (get x) ]
-        , viewHeader = viewHeader
-        , default = True
-        }
-
-
-clipboard : (a -> String) -> String -> String -> String -> Column a msg
-clipboard get name abbrev field =
-    Column
-        { name = name
-        , abbrev = abbrev
-        , field = field
-        , width = ""
-        , class = ""
-        , sortable = Just <| \a b -> compare (get a) (get b)
-        , searchable = Just get
-        , visible = True
-        , hiddable = True
-        , viewCell = viewClipboard << get
-        , viewHeader = viewHeader
         , default = True
         }
 
 
 expand : Pipe msg -> Lens State StateTable -> (a -> String) -> Column a msg
-expand pipe lens getID =
+expand onExpand lens getID =
     Column
         { name = ""
         , abbrev = ""
@@ -213,14 +184,13 @@ expand pipe lens getID =
         , searchable = Nothing
         , visible = True
         , hiddable = False
-        , viewCell = \v ( s, _ ) -> viewExpand lens getID v ( s, pipe )
-        , viewHeader = viewHeader
+        , viewCell = viewExpand onExpand lens getID
         , default = True
         }
 
 
 subtable : (a -> Bool) -> Pipe msg -> Lens State StateTable -> (a -> String) -> Column a msg
-subtable isDisable pipe lens getID =
+subtable isDisable onShowSubtable lens getID =
     Column
         { name = ""
         , abbrev = ""
@@ -231,14 +201,13 @@ subtable isDisable pipe lens getID =
         , searchable = Nothing
         , visible = True
         , hiddable = False
-        , viewCell = \v ( s, _ ) -> viewSubtable isDisable lens getID v ( s, pipe )
-        , viewHeader = viewHeader
+        , viewCell = \v -> viewSubtable onShowSubtable isDisable lens getID v
         , default = True
         }
 
 
-viewExpand : Lens State StateTable -> (a -> String) -> a -> ( State, Pipe msg ) -> List (Html msg)
-viewExpand lens getID v ( state, pipe ) =
+viewExpand : Pipe msg -> Lens State StateTable -> (a -> String) -> a -> State -> List (Html msg)
+viewExpand onExpand lens getID v state =
     let
         id =
             getID v
@@ -255,14 +224,14 @@ viewExpand lens getID v ( state, pipe ) =
     [ button
         [ class "w-6 h-6 pl-3 text-blue-600 hover:text-blue-300"
         , type_ "button"
-        , onClick <| pipe <| \s -> lens.set { conf | expanded = updatedExpand } s
+        , onClick <| onExpand <| \s -> lens.set { conf | expanded = updatedExpand } s
         ]
         [ iff isExpanded Collapse.view Expand.view ]
     ]
 
 
-viewSubtable : (a -> Bool) -> Lens State StateTable -> (a -> String) -> a -> ( State, Pipe msg ) -> List (Html msg)
-viewSubtable isDisable lens getID v ( state, pipe ) =
+viewSubtable : Pipe msg -> (a -> Bool) -> Lens State StateTable -> (a -> String) -> a -> State -> List (Html msg)
+viewSubtable onShowSubtable isDisable lens getID v state =
     if isDisable v then
         [ a [ class <| "w-6 h-6 " ++ isDisabled, disabled True ]
             [ Plus.view ]
@@ -285,14 +254,14 @@ viewSubtable isDisable lens getID v ( state, pipe ) =
         [ button
             [ class "w-6 h-6 text-blue-600 hover:text-blue-300"
             , type_ "button"
-            , onClick <| pipe <| \s -> lens.set { conf | subtable = updatedExpand } s
+            , onClick <| onShowSubtable <| \s -> lens.set { conf | subtable = updatedExpand } s
             ]
             [ iff isExpanded Minus.view Plus.view ]
         ]
 
 
-viewHeader : Column a msg -> ( State, Lens State StateTable, Pipe msg ) -> List (Html msg)
-viewHeader (Column col) ( state, lens, pipe ) =
+viewHeader : Lens State StateTable -> Pipe msg -> Column a msg -> State -> List (Html msg)
+viewHeader lens onSort (Column col) state =
     [ iff (String.isEmpty col.abbrev)
         (span [] [ text col.name ])
         (abbr [ title col.name ] [ text col.abbrev ])
@@ -301,7 +270,7 @@ viewHeader (Column col) ( state, lens, pipe ) =
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
                 , onClick <|
-                    pipe <|
+                    onSort <|
                         \s ->
                             let
                                 st =
@@ -324,7 +293,7 @@ viewHeader (Column col) ( state, lens, pipe ) =
             (a
                 [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
                 , onClick <|
-                    pipe <|
+                    onSort <|
                         \s ->
                             let
                                 st =
@@ -337,9 +306,3 @@ viewHeader (Column col) ( state, lens, pipe ) =
         )
         (text "")
     ]
-
-
-viewClipboard : String -> ( State, Pipe msg ) -> List (Html msg)
-viewClipboard _ _ =
-    -- TODO
-    [ div [] [ text "📋" ] ]

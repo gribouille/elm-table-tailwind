@@ -1,7 +1,7 @@
 module Table.Column exposing
     ( Column, ViewCell, ViewHeader
     , bool, default, float, int, string
-    , withClass, withDefault, withHeaderView, withHiddable, withHidden
+    , withClass, withDefault, withHiddable, withHidden
     , withSearchable, withSortable, withUnSortable, withView, withWidth
     )
 
@@ -17,7 +17,7 @@ module Table.Column exposing
 
 # Customization
 
-@docs withClass, withDefault, withHeaderView, withHiddable, withHidden
+@docs withClass, withDefault, withHiddable, withHidden
 @docs withSearchable, withSortable, withUnSortable, withView, withWidth
 
 -}
@@ -99,13 +99,6 @@ withHidden =
 withView : ViewCell a msg -> Column a msg -> Column a msg
 withView =
     Internal.Column.withView
-
-
-{-| Define a specific function to render the header.
--}
-withHeaderView : ViewHeader a msg -> Column a msg -> Column a msg
-withHeaderView =
-    Internal.Column.withHeaderView
 
 
 {-| Define a CSS class for the column.

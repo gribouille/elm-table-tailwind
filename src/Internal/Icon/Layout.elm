@@ -2,7 +2,7 @@ module Internal.Icon.Layout exposing (..)
 
 import Html.Attributes exposing (attribute)
 import Svg exposing (..)
-import Svg.Attributes exposing (d, fill, height, viewBox, width)
+import Svg.Attributes exposing (d, fill, viewBox)
 
 
 view : Svg msg
@@ -19,17 +19,3 @@ view =
 
 p x =
     path [ fill "currentColor", d x ] []
-
-
-
-{-
-
-
-   p "M9 7H7V9H9V7Z",
-   p "M7 13V11H9V13H7Z",
-   p "M7 15V17H9V15H7Z",
-   p "M11 15V17H17V15H11Z",
-   p "M17 13V11H11V13H17Z",
-   p "M17 7V9H11V7H17Z"
-
--}

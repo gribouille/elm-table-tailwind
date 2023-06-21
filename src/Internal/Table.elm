@@ -74,22 +74,19 @@ init (Config cfg) =
 view : Config a b msg -> Model a -> Html msg
 view config ((Model m) as model) =
     let
-        pipeInt =
-            pipeInternal config model
-
-        pipeExt =
-            pipeExternal config model
+        resolver =
+            resolve config model
     in
     div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full p-1" ] <|
-        tableHeader config pipeExt pipeInt m.state
+        tableHeader config resolver m.state
             :: (case m.rows of
                     Rows Loading ->
                         [ div [ class "flex flex-col items-center my-11" ] [ Spinner.view ]
                         ]
 
                     Rows (Loaded { total, rows }) ->
-                        [ tableContent config pipeExt pipeInt m.state rows
-                        , tableFooter config pipeInt pipeExt m.state total
+                        [ tableContent config resolver m.state rows
+                        , tableFooter config resolver m.state total
                         ]
 
                     Rows (Failed msg) ->
@@ -103,17 +100,17 @@ view config ((Model m) as model) =
 --
 
 
-tableHeader : Config a b msg -> Pipe msg -> Pipe msg -> State -> Html msg
-tableHeader ((Config cfg) as config) pipeExt pipeInt state =
+tableHeader : Config a b msg -> Resolver msg -> State -> Html msg
+tableHeader ((Config cfg) as config) resolve state =
     div [ class "mb-4 mt-2 flex gap-2" ]
-        [ div [ class "grow" ] <| headerSearch pipeExt pipeInt
+        [ div [ class "grow" ] <| headerSearch (resolve EnterSearch) (resolve InputSearch) (resolve Neutral)
         , div [ class "flex gap-2" ] cfg.toolbar
-        , div [ class "flex gap-2" ] <| Internal.Toolbar.view config pipeExt pipeInt state
+        , div [ class "flex gap-2" ] <| Internal.Toolbar.view config resolve state
         ]
 
 
-headerSearch : Pipe msg -> Pipe msg -> List (Html msg)
-headerSearch pipeExt pipeInt =
+headerSearch : Pipe msg -> Pipe msg -> Pipe msg -> List (Html msg)
+headerSearch onEnter onIn onInternal =
     [ label [ for "elm-table-tailwind-search", class "sr-only" ] [ text "Search" ]
     , div [ class "relative" ]
         [ div [ class "absolute inset-y-0 right-4 flex items-center pl-3 pointer-events-none" ]
@@ -126,7 +123,7 @@ headerSearch pipeExt pipeInt =
             , id "elm-table-tailwind-search"
             , onInput
                 (\s ->
-                    pipeInt <|
+                    onIn <|
                         \state ->
                             { state
                                 | search = s
@@ -138,14 +135,14 @@ headerSearch pipeExt pipeInt =
             , onKeyDown
                 (\i ->
                     iff (i == 13)
-                        (pipeExt <|
+                        (onEnter <|
                             \state ->
                                 { state
                                     | search = state.search
                                     , page = iff (state.search /= "") 0 state.page
                                 }
                         )
-                        (pipeInt <| \state -> state)
+                        (onInternal <| \state -> state)
                 )
             ]
             []
@@ -176,22 +173,22 @@ search =
 --
 
 
-tableContent : Config a b msg -> Pipe msg -> Pipe msg -> State -> List (Row a) -> Html msg
-tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
+tableContent : Config a b msg -> Resolver msg -> State -> List (Row a) -> Html msg
+tableContent ((Config cfg) as config) resolve state rows =
     let
         expandColumn =
-            ifMaybe (cfg.table.expand /= Nothing) (expand pipeInt lensTable cfg.table.getID)
+            ifMaybe (cfg.table.expand /= Nothing) (expand (resolve Expand) lensTable cfg.table.getID)
 
         subtableColumn =
             case cfg.subtable of
                 Just (SubTable get _) ->
-                    Just <| subtable (get >> List.isEmpty) pipeInt lensTable cfg.table.getID
+                    Just <| subtable (get >> List.isEmpty) (resolve ShowSubtable) lensTable cfg.table.getID
 
                 _ ->
                     Nothing
 
         selectColumn =
-            ifMaybe (cfg.selection /= Disable) (selectionParent pipeInt config rows)
+            ifMaybe (cfg.selection /= Disable) (selectionParent (resolve SelectRow) config rows)
 
         visibleColumns =
             List.filter
@@ -206,7 +203,7 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
 
         -- sort by columns
         srows =
-            iff (cfg.type_ == Static) (sort cfg.table.columns state.table rows) rows
+            iff (List.member SortColumn cfg.actions) rows (sort cfg.table.columns state.table rows)
 
         -- filter by search
         filter =
@@ -230,7 +227,7 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
                     )
 
         frows =
-            iff (cfg.type_ == Static) (filter srows) srows
+            iff (List.member SearchEnter cfg.actions) srows (filter srows)
 
         -- cut the results for the pagination
         cut =
@@ -241,34 +238,34 @@ tableContent ((Config cfg) as config) pipeExt pipeInt state rows =
                     |> Array.toList
 
         prows =
-            iff (cfg.type_ == Static && cfg.pagination /= None) (cut frows) frows
+            iff ((not <| List.member ChangePage cfg.actions) && cfg.pagination /= None) (cut frows) frows
     in
     table [ class "table-auto w-full text-sm text-left text-gray-600" ]
-        [ tableContentHead lensTable (cfg.selection /= Disable) pipeExt pipeInt columns state
-        , tableContentBody config pipeExt pipeInt columns state prows
+        [ tableContentHead lensTable (cfg.selection /= Disable) resolve columns state
+        , tableContentBody config resolve columns state prows
         ]
 
 
 tableContentHead :
     Lens State StateTable
     -> Bool
-    -> Pipe msg
-    -> Pipe msg
+    -> Resolver msg
     -> List (Column a msg)
     -> State
     -> Html msg
-tableContentHead lens hasSelection pipeExt pipeInt columns state =
+tableContentHead lens hasSelection resolve columns state =
     thead [ class "text-xs text-gray-700 uppercase bg-gray-50" ]
         [ tr [] <|
             List.indexedMap
                 (\i ((Column c) as col) ->
-                    if i == 0 && hasSelection then
-                        th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                            c.viewHeader col ( state, lens, pipeInt )
-
-                    else
-                        th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                            c.viewHeader col ( state, lens, pipeExt )
+                    th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
+                        viewHeader lens (resolve SortColumn) col state
+                 -- if i == 0 && hasSelection then
+                 --     th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
+                 --         c.viewHeader col ( state, lens, pipeInt )
+                 -- else
+                 --     th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
+                 --         c.viewHeader col ( state, lens, pipeExt )
                 )
                 columns
         ]
@@ -276,37 +273,35 @@ tableContentHead lens hasSelection pipeExt pipeInt columns state =
 
 tableContentBody :
     Config a b msg
-    -> Pipe msg
-    -> Pipe msg
+    -> Resolver msg
     -> List (Column a msg)
     -> State
     -> List (Row a)
     -> Html msg
-tableContentBody config pipeExt pipeInt columns state rows =
-    tbody [] <| List.concat (List.map (tableContentBodyRow config pipeExt pipeInt columns state) rows)
+tableContentBody config resolve columns state rows =
+    tbody [] <| List.concat (List.map (tableContentBodyRow config resolve columns state) rows)
 
 
 tableContentBodyRow :
     Config a b msg
-    -> Pipe msg
-    -> Pipe msg
+    -> Resolver msg
     -> List (Column a msg)
     -> State
     -> Row a
     -> List (Html msg)
-tableContentBodyRow ((Config cfg) as config) pipeExt pipeInt columns state (Row r) =
+tableContentBodyRow ((Config cfg) as config) resolve columns state (Row r) =
     [ tr [ class "bg-white border-b hover:bg-gray-50" ] <|
         List.map
             (\(Column c) ->
                 td [ class <| "px-4 py-2 " ++ c.class, style "width" c.width ] <|
-                    c.viewCell r ( state, pipeExt )
+                    c.viewCell r state
             )
             columns
     , case ( cfg.table.expand, List.member (cfg.table.getID r) state.table.expanded ) of
         ( Just (Column c), True ) ->
             tr [ class "bg-white border-b hover:bg-gray-50" ]
                 [ td [ class "px-4 py-2", colspan (List.length columns) ] <|
-                    c.viewCell r ( state, pipeExt )
+                    c.viewCell r state
                 ]
 
         _ ->
@@ -316,8 +311,7 @@ tableContentBodyRow ((Config cfg) as config) pipeExt pipeInt columns state (Row 
             tr []
                 [ td [ class "px-4 py-2", colspan (List.length columns) ]
                     [ subtableContent config
-                        pipeExt
-                        pipeInt
+                        resolve
                         (cfg.table.getID r)
                         conf
                         state
@@ -332,23 +326,22 @@ tableContentBodyRow ((Config cfg) as config) pipeExt pipeInt columns state (Row 
 
 subtableContent :
     Config a b msg
-    -> Pipe msg
-    -> Pipe msg
+    -> Resolver msg
     -> RowID
     -> ConfTable b msg
     -> State
     -> List b
     -> Html msg
-subtableContent ((Config cfg) as config) pipeExt pipeInt parent subConfig state data =
+subtableContent ((Config cfg) as config) resolve parent subConfig state data =
     let
         expandColumn =
-            ifMaybe (subConfig.expand /= Nothing) (expand pipeInt lensTable subConfig.getID)
+            ifMaybe (subConfig.expand /= Nothing) (expand (resolve Expand) lensTable subConfig.getID)
 
         rows =
             sort subConfig.columns state.subtable <| List.map Row data
 
         selectColumn =
-            ifMaybe (cfg.selection /= Disable) (selectionChild pipeInt config rows parent)
+            ifMaybe (cfg.selection /= Disable) (selectionChild (resolve SelectColumn) config rows parent)
 
         visibleColumns =
             List.filter
@@ -362,41 +355,29 @@ subtableContent ((Config cfg) as config) pipeExt pipeInt parent subConfig state 
     in
     div [ class "relative overflow-x-auto shadow-md sm:rounded-lg" ]
         [ table [ class "w-full text-sm text-left text-gray-500" ]
-            [ tableContentHead lensSubTable (cfg.selection /= Disable) pipeInt pipeExt columns state
-            , subtableContentBody pipeExt subConfig columns state rows
+            [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve columns state
+            , subtableContentBody subConfig columns state rows
             ]
         ]
 
 
-subtableContentBody :
-    Pipe msg
-    -> ConfTable a msg
-    -> List (Column a msg)
-    -> State
-    -> List (Row a)
-    -> Html msg
-subtableContentBody pipeExt cfg columns state rows =
-    tbody [] <| List.concat (List.map (subtableContentBodyRow pipeExt cfg columns state) rows)
+subtableContentBody : ConfTable a msg -> List (Column a msg) -> State -> List (Row a) -> Html msg
+subtableContentBody cfg columns state rows =
+    tbody [] <| List.concat (List.map (subtableContentBodyRow cfg columns state) rows)
 
 
-subtableContentBodyRow :
-    Pipe msg
-    -> ConfTable a msg
-    -> List (Column a msg)
-    -> State
-    -> Row a
-    -> List (Html msg)
-subtableContentBodyRow pipeExt cfg columns state (Row r) =
+subtableContentBodyRow : ConfTable a msg -> List (Column a msg) -> State -> Row a -> List (Html msg)
+subtableContentBodyRow cfg columns state (Row r) =
     [ tr [ class "hover:bg-slate-100" ] <|
         List.map
             (\(Column c) ->
-                td [ class ("px-4 py-2 " ++ c.class), style "width" c.width ] <| c.viewCell r ( state, pipeExt )
+                td [ class ("px-4 py-2 " ++ c.class), style "width" c.width ] <| c.viewCell r state
             )
             columns
     , case ( cfg.expand, List.member (cfg.getID r) state.subtable.expanded ) of
         ( Just (Column c), True ) ->
             tr [ class "hover:bg-slate-100" ]
-                [ td [ class "px-4 py-2", colspan (List.length columns) ] <| c.viewCell r ( state, pipeExt )
+                [ td [ class "px-4 py-2", colspan (List.length columns) ] <| c.viewCell r state
                 ]
 
         _ ->
@@ -410,14 +391,14 @@ subtableContentBodyRow pipeExt cfg columns state (Row r) =
 --
 
 
-tableFooter : Config a b msg -> Pipe msg -> Pipe msg -> State -> Int -> Html msg
-tableFooter (Config cfg) pipeInt pipeExt state total =
+tableFooter : Config a b msg -> Resolver msg -> State -> Int -> Html msg
+tableFooter (Config cfg) resolve state total =
     case cfg.pagination of
         ByPage _ ->
-            tableFooterPage cfg.type_ pipeInt pipeExt state.byPage state.page total
+            tableFooterPagination (resolve ChangePage) state.byPage state.page total
 
         Progressive { step } ->
-            tableFooterProgressive (iff (cfg.type_ == Static) pipeInt pipeExt) state.progressive state.byPage step total
+            tableFooterProgressive (resolve ShowMore) state.progressive state.byPage step total
 
         None ->
             text ""

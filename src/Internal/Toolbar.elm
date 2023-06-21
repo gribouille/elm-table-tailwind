@@ -13,20 +13,21 @@ import Internal.State exposing (..)
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
 import Svg exposing (Svg)
+import Table.Types exposing (Action(..))
 
 
-view : Config a b msg -> Pipe msg -> Pipe msg -> State -> List (Html msg)
-view (Config cfg) pipeExt pipeInt state =
+view : Config a b msg -> Resolver msg -> State -> List (Html msg)
+view (Config cfg) resolve state =
     [ case cfg.pagination of
         ByPage { capabilities } ->
-            toolbarMenuPagination pipeExt pipeInt state capabilities
+            toolbarMenuPagination (resolve OpenMenuPagination) (resolve ChangeByPage) state capabilities
 
         _ ->
             text ""
-    , toolbarMenuColumns cfg.table.columns pipeInt state
+    , toolbarMenuColumns cfg.table.columns (resolve OpenMenuColumns) (resolve ChangeColumnVisibility) state
     , case cfg.subtable of
         Just (SubTable _ conf) ->
-            toolbarMenuSubColumns conf.columns pipeInt state
+            toolbarMenuSubColumns conf.columns (resolve OpenMenuSubColumns) (resolve ChangeSubColumnVisibility) state
 
         Nothing ->
             text ""
@@ -34,11 +35,11 @@ view (Config cfg) pipeExt pipeInt state =
 
 
 toolbarMenuPagination : Pipe msg -> Pipe msg -> State -> List Int -> Html msg
-toolbarMenuPagination pipeExt pipeInt state capabilities =
+toolbarMenuPagination onOpenMenuPagination onChangeByPage state capabilities =
     toolbarMenuDropdown
         Layout.view
         "Pagination"
-        (pipeInt <|
+        (onOpenMenuPagination <|
             \s ->
                 { s
                     | btPagination = not s.btPagination
@@ -53,7 +54,7 @@ toolbarMenuPagination pipeExt pipeInt state capabilities =
                     []
                     [ a
                         [ class "block py-2 px-4 hover:bg-gray-100 hover:cursor-pointer"
-                        , onClick (pipeExt <| \s -> { s | byPage = i, page = iff (i /= s.byPage) 0 s.page })
+                        , onClick (onChangeByPage <| \s -> { s | byPage = i, page = iff (i /= s.byPage) 0 s.page })
                         ]
                         [ text (String.fromInt i)
                         , iff (i == state.byPage)
@@ -66,12 +67,12 @@ toolbarMenuPagination pipeExt pipeInt state capabilities =
         )
 
 
-toolbarMenuColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
-toolbarMenuColumns columns pipeInt state =
+toolbarMenuColumns : List (Column a msg) -> Pipe msg -> Pipe msg -> State -> Html msg
+toolbarMenuColumns columns onOpenMenuColumns onChangeColumnVisibility state =
     toolbarMenuDropdown
         Grid.view
         "Columns"
-        (pipeInt <|
+        (onOpenMenuColumns <|
             \s ->
                 { s
                     | btColumns = not s.btColumns
@@ -80,17 +81,17 @@ toolbarMenuColumns columns pipeInt state =
                 }
         )
         state.btColumns
-        (List.filterMap (dropdownItem pipeInt state lensTable) <|
+        (List.filterMap (dropdownItem onChangeColumnVisibility state lensTable) <|
             List.map (\(Column c) -> ( c.name, c.hiddable )) columns
         )
 
 
-toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
-toolbarMenuSubColumns columns pipeInt state =
+toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> Pipe msg -> State -> Html msg
+toolbarMenuSubColumns columns onOpenMenuSubColumns onChangeSubColumnVisibility state =
     toolbarMenuDropdown
         GridSmall.view
         "Columns of subtable"
-        (pipeInt <|
+        (onOpenMenuSubColumns <|
             \s ->
                 { s
                     | btSubColumns = not s.btSubColumns
@@ -99,7 +100,7 @@ toolbarMenuSubColumns columns pipeInt state =
                 }
         )
         state.btSubColumns
-        (List.filterMap (dropdownItem pipeInt state lensSubTable) <|
+        (List.filterMap (dropdownItem onChangeSubColumnVisibility state lensSubTable) <|
             List.map (\(Column c) -> ( c.name, c.hiddable )) columns
         )
 

@@ -1,10 +1,9 @@
 module Table.Config exposing
     ( Config
-    , static, dynamic
     , withExpand, withSelection, withSelectionFree, withSelectionLinked
     , withSelectionLinkedStrict, withSelectionExclusive
     , withSelectionExclusiveStrict, withPagination, withProgressive
-    , withToolbar, withErrorView, withSubtable
+    , withToolbar, withErrorView, withSubtable, withActions
     )
 
 {-| Configuration of the table.
@@ -12,17 +11,12 @@ module Table.Config exposing
 @docs Config
 
 
-# Constructors
-
-@docs static, dynamic
-
-
 # Customizations
 
 @docs withExpand, withSelection, withSelectionFree, withSelectionLinked
 @docs withSelectionLinkedStrict, withSelectionExclusive
 @docs withSelectionExclusiveStrict, withPagination, withProgressive
-@docs withToolbar, withErrorView, withSubtable
+@docs withToolbar, withErrorView, withSubtable, withActions
 
 -}
 
@@ -39,22 +33,6 @@ type alias Config a b msg =
     Internal.Config.Config a b msg
 
 
-{-| Define a configuration for a table with static data (i.e. with all loaded
-data at once).
--}
-static : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-static =
-    Internal.Config.static
-
-
-{-| Define a configuration for a table with dynamic data (i.e. with paginated
-loaded data).
--}
-dynamic : (Model a -> msg) -> (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-dynamic =
-    Internal.Config.dynamic
-
-
 {-| Add an full-width expandable row.
 -}
 withExpand : Column a msg -> Config a b msg -> Config a b msg
@@ -67,6 +45,13 @@ withExpand =
 withSelection : Selection -> Config a b msg -> Config a b msg
 withSelection =
     Internal.Config.withSelection
+
+
+{-| TODO
+-}
+withActions : (Model a -> msg) -> List Action -> Config a b msg -> Config a b msg
+withActions =
+    Internal.Config.withActions
 
 
 {-| Enable the selection with the _free_ logic (see `Selection` for more details).

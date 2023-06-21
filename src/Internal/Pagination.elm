@@ -14,7 +14,7 @@ import Table.Types exposing (..)
 
 
 tableFooterProgressive : Pipe msg -> Bool -> Int -> Int -> Int -> Html msg
-tableFooterProgressive pipe isLoading byPage step total =
+tableFooterProgressive onShowMore isLoading byPage step total =
     div [ class "my-5 w-full flex flex-col items-center" ]
         [ case ( isLoading, byPage < total ) of
             ( True, _ ) ->
@@ -23,7 +23,7 @@ tableFooterProgressive pipe isLoading byPage step total =
             ( False, True ) ->
                 a
                     [ class <| "text-base text-gray-400 bg-white rounded-r-lg hover:text-gray-700 hover:cursor-pointer"
-                    , onClick <| pipe <| \state -> { state | byPage = byPage + step }
+                    , onClick <| onShowMore <| \state -> { state | byPage = byPage + step }
                     ]
                     [ text <| "Show more (" ++ String.fromInt (total - byPage) ++ ") ..." ]
 
@@ -32,17 +32,14 @@ tableFooterProgressive pipe isLoading byPage step total =
         ]
 
 
-tableFooterPage : Type -> Pipe msg -> Pipe msg -> Int -> Int -> Int -> Html msg
-tableFooterPage type_ pipeInt pipeExt byPage page total =
+tableFooterPagination : Pipe msg -> Int -> Int -> Int -> Html msg
+tableFooterPagination onChange byPage page total =
     let
         nb =
             ceiling (toFloat total / toFloat byPage)
 
         ( ia, ib, ic ) =
             iff (nb == 1) ( 0, 0, 0 ) (pagIndex nb page)
-
-        pipe =
-            iff (type_ == Static) pipeInt pipeExt
     in
     div [ class "my-5 w-full flex flex-col items-center" ]
         [ nav
@@ -54,28 +51,28 @@ tableFooterPage type_ pipeInt pipeExt byPage page total =
                     li []
                         [ a
                             [ class <| "py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer " ++ iff (page == 0) isDisabled ""
-                            , onClick <| pipe <| \state -> { state | page = state.page - 1 }
+                            , onClick <| onChange <| \state -> { state | page = state.page - 1 }
                             ]
                             [ text "Previous" ]
                         ]
 
                 -- First page
-                , ifh (nb > 3) <| paginationLink pipe page 0
+                , ifh (nb > 3) <| paginationLink onChange page 0
                 , ifh (nb > 3) <| paginationEllipsis
 
                 -- Middle (m-1) m (m+1)
-                , ifh (nb > 1) <| paginationLink pipe page ia
-                , ifh (nb > 0) <| paginationLink pipe page ib
-                , ifh (nb > 2) <| paginationLink pipe page ic
+                , ifh (nb > 1) <| paginationLink onChange page ia
+                , ifh (nb > 0) <| paginationLink onChange page ib
+                , ifh (nb > 2) <| paginationLink onChange page ic
 
                 -- Last page
                 , ifh (nb > 4) <| paginationEllipsis
-                , ifh (nb > 4) <| paginationLink pipe page (nb - 1)
+                , ifh (nb > 4) <| paginationLink onChange page (nb - 1)
                 , ifh (nb > 1) <|
                     li []
                         [ a
                             [ class <| "py-2 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer" ++ iff (page == nb - 1) isDisabled ""
-                            , onClick <| pipe <| \state -> { state | page = page + 1 }
+                            , onClick <| onChange <| \state -> { state | page = page + 1 }
                             ]
                             [ text "Next" ]
                         ]

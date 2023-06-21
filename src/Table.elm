@@ -1,7 +1,7 @@
 module Table exposing
-    ( Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed, progressive
+    ( Model, Row, Rows, RowID, init, loaded, loading, failed, progressive
     , Pipe, State, Pagination, pagination, selected, subSelected, get
-    , Config, Column, static, dynamic
+    , Config, Column, config
     , view, subscriptions
     )
 
@@ -10,7 +10,7 @@ module Table exposing
 
 # Data
 
-@docs Model, Row, Rows, RowID, init, loaded, loadedDynamic, loadedStatic, loading, failed, progressive
+@docs Model, Row, Rows, RowID, init, loaded, loading, failed, progressive
 
 
 # State
@@ -20,7 +20,7 @@ module Table exposing
 
 # Configuration
 
-@docs Config, Column, static, dynamic
+@docs Config, Column, config
 
 
 # View
@@ -93,6 +93,12 @@ type alias Pagination =
     Internal.State.Pagination
 
 
+{-| -}
+config : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
+config =
+    Internal.Config.config
+
+
 {-| Table's view.
 -}
 view : Config a b msg -> Model a -> Html msg
@@ -120,21 +126,6 @@ incomplete.
 loaded : Model a -> List a -> Int -> Model a
 loaded =
     Internal.Data.loaded
-
-
-{-| Similar to `loaded`. Load partial data in the model and specified the total
-number of rows.
--}
-loadedDynamic : List a -> Int -> Model a -> Model a
-loadedDynamic rows total model =
-    Internal.Data.loaded model rows total
-
-
-{-| Similar to `loaded` with all data so `List.length rows == total`.
--}
-loadedStatic : List a -> Model a -> Model a
-loadedStatic rows model =
-    Internal.Data.loaded model rows (List.length rows)
 
 
 {-| Data loading is in progress.
@@ -170,22 +161,6 @@ pagination =
 subscriptions : Config a b msg -> Model a -> Sub msg
 subscriptions =
     Internal.Subscription.subscriptions
-
-
-{-| Define a configuration for a table with static data (i.e. with all loaded
-data at once).
--}
-static : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-static =
-    Internal.Config.static
-
-
-{-| Define a configuration for a table with dynamic data (i.e. with paginated
-loaded data).
--}
-dynamic : (Model a -> msg) -> (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a () msg
-dynamic =
-    Internal.Config.dynamic
 
 
 {-| Return the list of selected rows.

@@ -6,12 +6,13 @@ import Internal.Config exposing (..)
 import Internal.Data exposing (..)
 import Internal.State exposing (..)
 import Json.Decode as Decode
+import Table.Types exposing (Action(..))
 
 
 subscriptions : Config a b msg -> Model a -> Sub msg
 subscriptions config model =
     if isModal model then
-        Browser.Events.onMouseDown (outsideTarget (pipeInternal config model) "dropdown")
+        Browser.Events.onMouseDown (outsideTarget (resolve config model Neutral) "dropdown")
 
     else
         Sub.none
