@@ -50,8 +50,12 @@ tableFooterPagination onChange byPage page total =
                 [ ifh (nb > 1) <|
                     li []
                         [ a
-                            [ class <| "py-2 px-3 ml-0 leading-tight text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer " ++ iff (page == 0) isDisabled ""
-                            , onClick <| onChange <| \state -> { state | page = state.page - 1 }
+                            [ class <|
+                                """py-2 px-3 ml-0 leading-tight text-gray-500 bg-white
+                                   rounded-l-lg border border-gray-300 hover:bg-gray-100
+                                   hover:text-gray-700 hover:cursor-pointer """
+                                    ++ iff (page == 0) isDisabled ""
+                            , onClick <| onChange <| \state -> iff (page == 0) state { state | page = state.page - 1 }
                             ]
                             [ text "Previous" ]
                         ]
@@ -71,8 +75,12 @@ tableFooterPagination onChange byPage page total =
                 , ifh (nb > 1) <|
                     li []
                         [ a
-                            [ class <| "py-2 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer" ++ iff (page == nb - 1) isDisabled ""
-                            , onClick <| onChange <| \state -> { state | page = page + 1 }
+                            [ class <|
+                                """py-2 px-3 leading-tight text-gray-500 bg-white rounded-r-lg
+                                   border border-gray-300 hover:bg-gray-100 hover:text-gray-700
+                                   hover:cursor-pointer """
+                                    ++ iff (page == nb - 1) isDisabled ""
+                            , onClick <| onChange <| \state -> iff (page == nb - 1) state { state | page = page + 1 }
                             ]
                             [ text "Next" ]
                         ]

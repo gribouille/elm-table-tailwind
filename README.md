@@ -16,7 +16,7 @@ Full features ELM table component for Tailwind.
 - [x] refact (v4): remove static/dynamic table
 - [ ] feat: infinite scroll
 - [ ] feat: iterop: JS API
-- [ ] bug: static pagination limit
+- [x] bug: static pagination limit
 
 
 ## Usage
