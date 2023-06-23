@@ -22,10 +22,10 @@ config =
     Table.config
         OnTable
         (String.fromInt << .id)
-        [ Column.int .id "ID" "" ""
-        , Column.string .firstname "Firstname" "" ""
-        , Column.string .lastname "Lastname" "" ""
-        , Column.int .age "Age" "" ""
+        [ Column.int .id "ID" ""
+        , Column.string .firstname "Firstname" ""
+        , Column.string .lastname "Lastname" ""
+        , Column.int .age "Age" ""
         ]
         |> Config.withProgressive 4 3
 

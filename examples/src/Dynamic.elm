@@ -17,7 +17,7 @@ type alias Model =
 
 type Msg
     = OnTableInternal Model
-    | OnTableExternal Model
+    | OnTableExternal Model Action
     | OnData (Result Error Payload)
 
 
@@ -33,11 +33,11 @@ config =
 
 
 columns =
-    [ Column.int .id "ID" "" "" |> Column.withWidth "10px"
-    , Column.string .firstname "Firstname" "" ""
-    , Column.string .lastname "Lastname" "" ""
-    , Column.string .email "Email" "" ""
-    , Column.string .avatar "Avatar" "" "" |> Column.withView viewCellAvatar
+    [ Column.int .id "ID" "" |> Column.withWidth "10px"
+    , Column.string .firstname "Firstname" ""
+    , Column.string .lastname "Lastname" ""
+    , Column.string .email "Email" ""
+    , Column.string .avatar "Avatar" "" |> Column.withView viewCellAvatar
     ]
 
 
@@ -68,7 +68,7 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnTableExternal m ->
+        OnTableExternal m _ ->
             ( Table.loading m, get OnData ((Table.pagination m).page + 1) )
 
         OnTableInternal m ->

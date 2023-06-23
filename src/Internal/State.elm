@@ -1,6 +1,6 @@
 module Internal.State exposing (..)
 
-import Monocle.Lens exposing (Lens, compose)
+import Monocle.Lens as Lens exposing (Lens, compose)
 import Table.Types exposing (Sort(..))
 
 
@@ -41,6 +41,7 @@ type alias StateTable =
     , subtable : List RowID
     , orderBy : Maybe String
     , order : Sort
+    , loading : List String -- Row ID
     }
 
 
@@ -72,6 +73,16 @@ lensTable =
 lensSubTable : Lens State StateTable
 lensSubTable =
     Lens .subtable (\b a -> { a | subtable = b })
+
+
+lensLoading : Lens StateTable (List String)
+lensLoading =
+    Lens .loading (\b a -> { a | loading = b })
+
+
+lensSubTableLoading : Lens State (List String)
+lensSubTableLoading =
+    Lens.compose lensSubTable lensLoading
 
 
 next : Sort -> Sort

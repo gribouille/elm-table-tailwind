@@ -1,6 +1,6 @@
 module Table exposing
-    ( Model, Row, Rows, RowID, init, loaded, loading, failed, progressive
-    , Pipe, State, Pagination, pagination, selected, subSelected, get
+    ( Model, Row, Rows, RowID, init, loaded, loading, loadingSubtable, loadingSubtableLast, failed, progressive
+    , Pipe, State, Pagination, pagination, selected, subSelected, get, lastExpand, length
     , Config, Column, config
     , view, subscriptions
     )
@@ -10,12 +10,12 @@ module Table exposing
 
 # Data
 
-@docs Model, Row, Rows, RowID, init, loaded, loading, failed, progressive
+@docs Model, Row, Rows, RowID, init, loaded, loading, loadingSubtable, loadingSubtableLast, failed, progressive
 
 
 # State
 
-@docs Pipe, State, Pagination, pagination, selected, subSelected, get
+@docs Pipe, State, Pagination, pagination, selected, subSelected, get, lastExpand, length
 
 
 # Configuration
@@ -120,6 +120,13 @@ get =
     Internal.Data.getItems << Internal.Data.getRows
 
 
+{-| TODO
+-}
+length : Model a -> Int
+length =
+    Internal.Data.length << Internal.Data.getRows
+
+
 {-| Load the data in the model with the total number of rows if the data are
 incomplete.
 -}
@@ -133,6 +140,27 @@ loaded =
 loading : Model a -> Model a
 loading =
     Internal.Data.loading
+
+
+{-| TODO
+-}
+loadingSubtableLast : Model a -> Model a
+loadingSubtableLast =
+    Internal.Data.loadingSubtableLast
+
+
+{-| TODO
+-}
+loadingSubtable : String -> Model a -> Model a
+loadingSubtable =
+    Internal.Data.loadingSubtable
+
+
+{-| TODO
+-}
+lastExpand : Model a -> String
+lastExpand =
+    Internal.Data.lastExpand
 
 
 {-| Data loading has failed.

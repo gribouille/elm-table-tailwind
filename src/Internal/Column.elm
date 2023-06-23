@@ -87,12 +87,22 @@ withClass name (Column col) =
     Column { col | class = name }
 
 
-default : String -> String -> String -> ViewCell a msg -> Column a msg
-default name abbrev field view =
+withField : String -> Column a msg -> Column a msg
+withField name (Column col) =
+    Column { col | field = name }
+
+
+withAbbreviation : String -> Column a msg -> Column a msg
+withAbbreviation abbrev (Column col) =
+    Column { col | abbrev = abbrev }
+
+
+default : String -> String -> ViewCell a msg -> Column a msg
+default name abbrev view =
     Column
         { name = name
         , abbrev = abbrev
-        , field = field
+        , field = ""
         , width = ""
         , class = ""
         , sortable = Nothing
@@ -104,12 +114,12 @@ default name abbrev field view =
         }
 
 
-int : (a -> Int) -> String -> String -> String -> Column a msg
-int get name abbrev field =
+int : (a -> Int) -> String -> String -> Column a msg
+int get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = field
+        , field = ""
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -121,12 +131,12 @@ int get name abbrev field =
         }
 
 
-string : (a -> String) -> String -> String -> String -> Column a msg
-string get name abbrev field =
+string : (a -> String) -> String -> String -> Column a msg
+string get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = field
+        , field = ""
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -138,12 +148,12 @@ string get name abbrev field =
         }
 
 
-bool : (a -> Bool) -> String -> String -> String -> Column a msg
-bool get name abbrev field =
+bool : (a -> Bool) -> String -> String -> Column a msg
+bool get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = field
+        , field = ""
         , width = ""
         , class = "text-xl"
         , sortable = Nothing
@@ -155,12 +165,12 @@ bool get name abbrev field =
         }
 
 
-float : (a -> Float) -> String -> String -> String -> Column a msg
-float get name abbrev field =
+float : (a -> Float) -> String -> String -> Column a msg
+float get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = field
+        , field = ""
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)

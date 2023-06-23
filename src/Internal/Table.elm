@@ -58,8 +58,8 @@ init (Config cfg) =
             , btPagination = False
             , btColumns = False
             , btSubColumns = False
-            , table = StateTable visibleColumns [] [] [] Nothing Ascending
-            , subtable = StateTable visibleSubColumns [] [] [] Nothing Ascending
+            , table = StateTable visibleColumns [] [] [] Nothing Ascending []
+            , subtable = StateTable visibleSubColumns [] [] [] Nothing Ascending []
             }
         , rows = Rows Loading
         }
@@ -182,7 +182,11 @@ tableContent ((Config cfg) as config) resolve state rows =
         subtableColumn =
             case cfg.subtable of
                 Just (SubTable get _) ->
-                    Just <| subtable (get >> List.isEmpty) (resolve ShowSubtable) lensTable cfg.table.getID
+                    Just <|
+                        subtable (get >> (\x -> List.isEmpty x && not (List.member ShowSubtable cfg.actions)))
+                            (resolve ShowSubtable)
+                            lensTable
+                            cfg.table.getID
 
                 _ ->
                     Nothing
@@ -271,24 +275,12 @@ tableContentHead lens hasSelection resolve columns state =
         ]
 
 
-tableContentBody :
-    Config a b msg
-    -> Resolver msg
-    -> List (Column a msg)
-    -> State
-    -> List (Row a)
-    -> Html msg
+tableContentBody : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> List (Row a) -> Html msg
 tableContentBody config resolve columns state rows =
     tbody [] <| List.concat (List.map (tableContentBodyRow config resolve columns state) rows)
 
 
-tableContentBodyRow :
-    Config a b msg
-    -> Resolver msg
-    -> List (Column a msg)
-    -> State
-    -> Row a
-    -> List (Html msg)
+tableContentBodyRow : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> Row a -> List (Html msg)
 tableContentBodyRow ((Config cfg) as config) resolve columns state (Row r) =
     [ tr [ class "bg-white border-b hover:bg-gray-50" ] <|
         List.map
@@ -316,6 +308,7 @@ tableContentBodyRow ((Config cfg) as config) resolve columns state (Row r) =
                         conf
                         state
                         (getValue r)
+                        (List.member (cfg.table.getID r) state.subtable.loading)
                     ]
                 ]
 
@@ -331,8 +324,9 @@ subtableContent :
     -> ConfTable b msg
     -> State
     -> List b
+    -> Bool
     -> Html msg
-subtableContent ((Config cfg) as config) resolve parent subConfig state data =
+subtableContent ((Config cfg) as config) resolve parent subConfig state data isLoading =
     let
         expandColumn =
             ifMaybe (subConfig.expand /= Nothing) (expand (resolve Expand) lensTable subConfig.getID)
@@ -354,10 +348,14 @@ subtableContent ((Config cfg) as config) resolve parent subConfig state data =
                 |> prependMaybe selectColumn
     in
     div [ class "relative overflow-x-auto shadow-md sm:rounded-lg" ]
-        [ table [ class "w-full text-sm text-left text-gray-500" ]
-            [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve columns state
-            , subtableContentBody subConfig columns state rows
-            ]
+        [ if isLoading then
+            div [ class "m-4 flex flex-col items-center" ] [ Spinner.view ]
+
+          else
+            table [ class "w-full text-sm text-left text-gray-500" ]
+                [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve columns state
+                , subtableContentBody subConfig columns state rows
+                ]
         ]
 
 

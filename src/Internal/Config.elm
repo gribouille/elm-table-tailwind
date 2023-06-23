@@ -24,7 +24,7 @@ type Config a b msg
 
 type alias ConfigInternal a b msg =
     { selection : Selection
-    , onExternal : Model a -> msg
+    , onExternal : Model a -> Action -> msg
     , onInternal : Model a -> msg
     , table : ConfTable a msg
     , pagination : Pagination
@@ -50,7 +50,7 @@ config : (Model a -> msg) -> (a -> String) -> List (Column a msg) -> Config a ()
 config onInternal getID columns =
     Config
         { selection = Disable
-        , onExternal = onInternal
+        , onExternal = \m _ -> onInternal m
         , onInternal = onInternal
         , table = ConfTable columns getID Nothing
         , pagination = None
@@ -61,7 +61,7 @@ config onInternal getID columns =
         }
 
 
-withActions : (Model a -> msg) -> List Action -> Config a b msg -> Config a b msg
+withActions : (Model a -> Action -> msg) -> List Action -> Config a b msg -> Config a b msg
 withActions onExternal actions (Config c) =
     Config { c | actions = actions, onExternal = onExternal }
 
@@ -157,7 +157,7 @@ errorView msg =
 resolve : Config a b msg -> Model a -> Action -> Pipe msg
 resolve (Config c) (Model m) a fn =
     if List.member a c.actions then
-        c.onExternal <| Model { rows = m.rows, state = fn m.state }
+        c.onExternal (Model { rows = m.rows, state = fn m.state }) a
 
     else
         c.onInternal <| Model { rows = m.rows, state = fn m.state }

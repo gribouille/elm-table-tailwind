@@ -16,8 +16,8 @@ type alias Model =
 
 type Msg
     = OnTableInternal Model
-    | OnTableExternal Model
-    | OnData (Result Error Payload)
+    | OnTableExternal Model Action
+    | OnData (Result Error Users)
 
 
 config : Table.Config User () Msg
@@ -25,11 +25,11 @@ config =
     Table.config
         OnTableInternal
         .id
-        [ Column.string .id "ID" "" ""
-        , Column.string .firstname "Firstname" "" ""
-        , Column.string .lastname "Lastname" "" ""
-        , Column.string .email "Email" "" ""
-        , Column.string .bio "bio" "" ""
+        [ Column.string .id "ID" ""
+        , Column.string .firstname "Firstname" ""
+        , Column.string .lastname "Lastname" ""
+        , Column.string .email "Email" ""
+        , Column.string .bio "bio" ""
         ]
         |> Config.withProgressive 10 5
         |> Config.withActions OnTableExternal [ EnterSearch ]
@@ -47,7 +47,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Table.init config, get OnData 0 20 )
+    ( Table.init config, getUsers OnData 0 20 )
 
 
 view : Model -> Html Msg
@@ -58,8 +58,8 @@ view model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnTableExternal m ->
-            ( Table.progressive m, get OnData ((Table.pagination m).page + 1) 20 )
+        OnTableExternal m _ ->
+            ( Table.progressive m, getUsers OnData ((Table.pagination m).page + 1) 20 )
 
         OnTableInternal m ->
             ( m, Cmd.none )

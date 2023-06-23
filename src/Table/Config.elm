@@ -49,7 +49,7 @@ withSelection =
 
 {-| TODO
 -}
-withActions : (Model a -> msg) -> List Action -> Config a b msg -> Config a b msg
+withActions : (Model a -> Action -> msg) -> List Action -> Config a b msg -> Config a b msg
 withActions =
     Internal.Config.withActions
 
