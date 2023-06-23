@@ -87,15 +87,9 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         OnTableExternal m a ->
-            let
-                _ =
-                    Debug.log "a" a
-            in
             case a of
                 ShowSubtable ->
                     let
-                        _ =
-                            Debug.log "Table.lastExpand m" (Table.lastExpand m)
 
                         id =
                             Table.lastExpand m
@@ -115,10 +109,6 @@ update msg model =
             ( model, Cmd.none )
 
         OnGotReservations id (Ok res) ->
-            let
-                _ =
-                    Debug.log "OnGotReservations" id
-            in
             ( Table.loaded (Table.loadingSubtable id model)
                 (List.map
                     (\x ->

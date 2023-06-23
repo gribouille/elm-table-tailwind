@@ -87,10 +87,12 @@ type Action
     | ShowColumn
     | ShowSubColumn
     | Expand
+    | Collapse
     | ShowSubtable
     | SortColumn
     | SortSubColumn
     | SelectColumn
+    | SelectSubColumn
     | SelectRow
     | OpenMenuPagination
     | OpenMenuColumns

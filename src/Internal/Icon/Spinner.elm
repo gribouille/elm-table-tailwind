@@ -1,7 +1,7 @@
 module Internal.Icon.Spinner exposing (..)
 
 import Html exposing (div)
-import Html.Attributes exposing (attribute, style)
+import Html.Attributes exposing (attribute)
 import Svg exposing (Svg, g, path, svg)
 import Svg.Attributes exposing (clipRule, d, fill, fillRule, height, opacity, viewBox, width)
 import VirtualDom

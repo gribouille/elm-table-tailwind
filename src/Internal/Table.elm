@@ -177,7 +177,7 @@ tableContent : Config a b msg -> Resolver msg -> State -> List (Row a) -> Html m
 tableContent ((Config cfg) as config) resolve state rows =
     let
         expandColumn =
-            ifMaybe (cfg.table.expand /= Nothing) (expand (resolve Expand) lensTable cfg.table.getID)
+            ifMaybe (cfg.table.expand /= Nothing) (expand (resolve Expand) (resolve Collapse) lensTable cfg.table.getID)
 
         subtableColumn =
             case cfg.subtable of
@@ -245,7 +245,7 @@ tableContent ((Config cfg) as config) resolve state rows =
             iff ((not <| List.member ChangePage cfg.actions) && cfg.pagination /= None) (cut frows) frows
     in
     table [ class "table-auto w-full text-sm text-left text-gray-600" ]
-        [ tableContentHead lensTable (cfg.selection /= Disable) resolve columns state
+        [ tableContentHead lensTable (cfg.selection /= Disable) resolve SortColumn SelectColumn columns state
         , tableContentBody config resolve columns state prows
         ]
 
@@ -254,22 +254,18 @@ tableContentHead :
     Lens State StateTable
     -> Bool
     -> Resolver msg
+    -> Action
+    -> Action
     -> List (Column a msg)
     -> State
     -> Html msg
-tableContentHead lens hasSelection resolve columns state =
+tableContentHead lens hasSelection resolve actSelect actSort columns state =
     thead [ class "text-xs text-gray-700 uppercase bg-gray-50" ]
         [ tr [] <|
             List.indexedMap
                 (\i ((Column c) as col) ->
                     th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                        viewHeader lens (resolve SortColumn) col state
-                 -- if i == 0 && hasSelection then
-                 --     th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                 --         c.viewHeader col ( state, lens, pipeInt )
-                 -- else
-                 --     th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                 --         c.viewHeader col ( state, lens, pipeExt )
+                        viewHeader lens (resolve (iff (i == 0 && hasSelection) actSelect actSort)) col state
                 )
                 columns
         ]
@@ -329,7 +325,7 @@ subtableContent :
 subtableContent ((Config cfg) as config) resolve parent subConfig state data isLoading =
     let
         expandColumn =
-            ifMaybe (subConfig.expand /= Nothing) (expand (resolve Expand) lensTable subConfig.getID)
+            ifMaybe (subConfig.expand /= Nothing) (expand (resolve Expand) (resolve Collapse) lensTable subConfig.getID)
 
         rows =
             sort subConfig.columns state.subtable <| List.map Row data
@@ -353,7 +349,7 @@ subtableContent ((Config cfg) as config) resolve parent subConfig state data isL
 
           else
             table [ class "w-full text-sm text-left text-gray-500" ]
-                [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve columns state
+                [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve SortSubColumn SelectSubColumn columns state
                 , subtableContentBody subConfig columns state rows
                 ]
         ]

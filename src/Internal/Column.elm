@@ -102,7 +102,7 @@ default name abbrev view =
     Column
         { name = name
         , abbrev = abbrev
-        , field = ""
+        , field = name
         , width = ""
         , class = ""
         , sortable = Nothing
@@ -119,7 +119,7 @@ int get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = ""
+        , field = name
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -136,7 +136,7 @@ string get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = ""
+        , field = name
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -153,7 +153,7 @@ bool get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = ""
+        , field = name
         , width = ""
         , class = "text-xl"
         , sortable = Nothing
@@ -170,7 +170,7 @@ float get name abbrev =
     Column
         { name = name
         , abbrev = abbrev
-        , field = ""
+        , field = name
         , width = ""
         , class = ""
         , sortable = Just <| \a b -> compare (get a) (get b)
@@ -182,8 +182,8 @@ float get name abbrev =
         }
 
 
-expand : Pipe msg -> Lens State StateTable -> (a -> String) -> Column a msg
-expand onExpand lens getID =
+expand : Pipe msg -> Pipe msg -> Lens State StateTable -> (a -> String) -> Column a msg
+expand onExpand onCollapse lens getID =
     Column
         { name = ""
         , abbrev = ""
@@ -194,7 +194,7 @@ expand onExpand lens getID =
         , searchable = Nothing
         , visible = True
         , hiddable = False
-        , viewCell = viewExpand onExpand lens getID
+        , viewCell = viewExpand onExpand onCollapse lens getID
         , default = True
         }
 
@@ -216,8 +216,8 @@ subtable isDisable onShowSubtable lens getID =
         }
 
 
-viewExpand : Pipe msg -> Lens State StateTable -> (a -> String) -> a -> State -> List (Html msg)
-viewExpand onExpand lens getID v state =
+viewExpand : Pipe msg -> Pipe msg -> Lens State StateTable -> (a -> String) -> a -> State -> List (Html msg)
+viewExpand onExpand onCollapse lens getID v state =
     let
         id =
             getID v
@@ -234,7 +234,7 @@ viewExpand onExpand lens getID v state =
     [ button
         [ class "w-6 h-6 pl-3 text-blue-600 hover:text-blue-300"
         , type_ "button"
-        , onClick <| onExpand <| \s -> lens.set { conf | expanded = updatedExpand } s
+        , onClick <| iff isExpanded onCollapse onExpand <| \s -> lens.set { conf | expanded = updatedExpand } s
         ]
         [ iff isExpanded Collapse.view Expand.view ]
     ]
@@ -272,47 +272,41 @@ viewSubtable onShowSubtable isDisable lens getID v state =
 
 viewHeader : Lens State StateTable -> Pipe msg -> Column a msg -> State -> List (Html msg)
 viewHeader lens onSort (Column col) state =
-    [ iff (String.isEmpty col.abbrev)
-        (span [] [ text col.name ])
-        (abbr [ title col.name ] [ text col.abbrev ])
+    [ iff (String.isEmpty col.abbrev) (span [] [ text col.name ]) (abbr [ title col.name ] [ text col.abbrev ])
     , iff (col.sortable /= Nothing)
-        (iff ((lens.get state).orderBy == Just col.field)
-            (a
-                [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-                , onClick <|
-                    onSort <|
-                        \s ->
-                            let
-                                st =
-                                    lens.get s
-                            in
-                            lens.set { st | order = next st.order } s
-                ]
-                [ text <|
-                    case (lens.get state).order of
-                        Ascending ->
-                            "↿"
-
-                        Descending ->
-                            "⇂"
-
-                        StandBy ->
-                            "⇅"
-                ]
-            )
-            (a
-                [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-                , onClick <|
-                    onSort <|
-                        \s ->
-                            let
-                                st =
-                                    lens.get s
-                            in
-                            lens.set { st | order = Ascending, orderBy = Just col.field } s
-                ]
-                [ text "⇅" ]
-            )
+        (a
+            [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
+            , onClick <|
+                onSort <|
+                    \s ->
+                        let
+                            st =
+                                lens.get s
+                        in
+                        lens.set
+                            { st
+                                | order =
+                                    iff ((lens.get state).orderBy == Just col.field)
+                                        (next st.order)
+                                        Ascending
+                                , orderBy = Just col.field
+                            }
+                            s
+            ]
+            [ text <| iff ((lens.get state).orderBy == Just col.field) (symbolSort (lens.get state).order) "⇅" ]
         )
         (text "")
     ]
+
+
+symbolSort : Sort -> String
+symbolSort order =
+    case order of
+        Ascending ->
+            "↿"
+
+        Descending ->
+            "⇂"
+
+        StandBy ->
+            "⇅"
