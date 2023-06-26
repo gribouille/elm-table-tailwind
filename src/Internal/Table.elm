@@ -3,19 +3,16 @@ module Internal.Table exposing (..)
 import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
-import Internal.Icon.Spinner as Spinner
-import Internal.Pagination exposing (..)
+import Internal.Pagination as Pagination
 import Internal.Selection exposing (..)
 import Internal.State exposing (..)
+import Internal.Tailwind.Table
 import Internal.Toolbar
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
-import Svg as S
-import Svg.Attributes as SA
 import Table.Types exposing (..)
 
 
@@ -77,20 +74,19 @@ view config ((Model m) as model) =
         resolver =
             resolve config model
     in
-    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg w-full h-full p-1" ] <|
-        tableHeader config resolver m.state
+    Internal.Tailwind.Table.frame <|
+        header config resolver m.state
             :: (case m.rows of
                     Rows Loading ->
-                        [ div [ class "flex flex-col items-center my-11" ] [ Spinner.view ]
-                        ]
+                        [ Internal.Tailwind.Table.loading ]
 
                     Rows (Loaded { total, rows }) ->
-                        [ tableContent config resolver m.state rows
-                        , tableFooter config resolver m.state total
+                        [ content config resolver m.state rows
+                        , footer config resolver m.state total
                         ]
 
                     Rows (Failed msg) ->
-                        [ errorView msg ]
+                        [ Internal.Tailwind.Table.errorView msg ]
                )
 
 
@@ -100,71 +96,40 @@ view config ((Model m) as model) =
 --
 
 
-tableHeader : Config a b msg -> Resolver msg -> State -> Html msg
-tableHeader ((Config cfg) as config) resolve state =
-    div [ class "mb-4 mt-2 flex gap-2" ]
-        [ div [ class "grow" ] <| headerSearch (resolve EnterSearch) (resolve InputSearch) (resolve Neutral)
-        , div [ class "flex gap-2" ] cfg.toolbar
-        , div [ class "flex gap-2" ] <| Internal.Toolbar.view config resolve state
-        ]
+header : Config a b msg -> Resolver msg -> State -> Html msg
+header ((Config cfg) as config) resolve state =
+    Internal.Tailwind.Table.header
+        { search = search (resolve EnterSearch) (resolve InputSearch) (resolve Neutral)
+        , custom = cfg.toolbar
+        , internal = Internal.Toolbar.view config resolve state
+        }
 
 
-headerSearch : Pipe msg -> Pipe msg -> Pipe msg -> List (Html msg)
-headerSearch onEnter onIn onInternal =
-    [ label [ for "elm-table-tailwind-search", class "sr-only" ] [ text "Search" ]
-    , div [ class "relative" ]
-        [ div [ class "absolute inset-y-0 right-4 flex items-center pl-3 pointer-events-none" ]
-            [ search
-            ]
-        , input
-            [ class "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2"
-            , type_ "text"
-            , placeholder "Search..."
-            , id "elm-table-tailwind-search"
-            , onInput
-                (\s ->
-                    onIn <|
+search : Pipe msg -> Pipe msg -> Pipe msg -> List (Html msg)
+search onEnter onIn onInternal =
+    Internal.Tailwind.Table.search
+        { input =
+            \s ->
+                onIn <|
+                    \state ->
+                        { state
+                            | search = s
+                            , btPagination = False
+                            , btColumns = False
+                            , btSubColumns = False
+                        }
+        , keyDown =
+            \i ->
+                iff (i == 13)
+                    (onEnter <|
                         \state ->
                             { state
-                                | search = s
-                                , btPagination = False
-                                , btColumns = False
-                                , btSubColumns = False
+                                | search = state.search
+                                , page = iff (state.search /= "") 0 state.page
                             }
-                )
-            , onKeyDown
-                (\i ->
-                    iff (i == 13)
-                        (onEnter <|
-                            \state ->
-                                { state
-                                    | search = state.search
-                                    , page = iff (state.search /= "") 0 state.page
-                                }
-                        )
-                        (onInternal <| \state -> state)
-                )
-            ]
-            []
-        ]
-    ]
-
-
-search : S.Svg msg
-search =
-    S.svg
-        [ SA.class "w-4 h-4 text-gray-500"
-        , SA.fill "currentColor"
-        , SA.viewBox "0 0 20 20"
-        , attribute "xmlns" "http://www.w3.org/2000/svg"
-        ]
-        [ S.path
-            [ SA.fillRule "evenodd"
-            , SA.clipRule "evenodd"
-            , SA.d "M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-            ]
-            []
-        ]
+                    )
+                    (onInternal <| \state -> state)
+        }
 
 
 
@@ -173,8 +138,8 @@ search =
 --
 
 
-tableContent : Config a b msg -> Resolver msg -> State -> List (Row a) -> Html msg
-tableContent ((Config cfg) as config) resolve state rows =
+content : Config a b msg -> Resolver msg -> State -> List (Row a) -> Html msg
+content ((Config cfg) as config) resolve state rows =
     let
         expandColumn =
             ifMaybe (cfg.table.expand /= Nothing) (expand (resolve Expand) (resolve Collapse) lensTable cfg.table.getID)
@@ -244,13 +209,13 @@ tableContent ((Config cfg) as config) resolve state rows =
         prows =
             iff ((not <| List.member ChangePage cfg.actions) && cfg.pagination /= None) (cut frows) frows
     in
-    table [ class "table-auto w-full text-sm text-left text-gray-600" ]
-        [ tableContentHead lensTable (cfg.selection /= Disable) resolve SortColumn SelectColumn columns state
-        , tableContentBody config resolve columns state prows
+    Internal.Tailwind.Table.content
+        [ contentHead lensTable (cfg.selection /= Disable) resolve SortColumn SelectColumn columns state
+        , contentBody config resolve columns state prows
         ]
 
 
-tableContentHead :
+contentHead :
     Lens State StateTable
     -> Bool
     -> Resolver msg
@@ -259,58 +224,47 @@ tableContentHead :
     -> List (Column a msg)
     -> State
     -> Html msg
-tableContentHead lens hasSelection resolve actSelect actSort columns state =
-    thead [ class "text-xs text-gray-700 uppercase bg-gray-50" ]
-        [ tr [] <|
-            List.indexedMap
-                (\i ((Column c) as col) ->
-                    th [ scope "col", class "px-4 py-3", style "width" c.width ] <|
-                        viewHeader lens (resolve (iff (i == 0 && hasSelection) actSelect actSort)) col state
-                )
-                columns
-        ]
-
-
-tableContentBody : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> List (Row a) -> Html msg
-tableContentBody config resolve columns state rows =
-    tbody [] <| List.concat (List.map (tableContentBodyRow config resolve columns state) rows)
-
-
-tableContentBodyRow : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> Row a -> List (Html msg)
-tableContentBodyRow ((Config cfg) as config) resolve columns state (Row r) =
-    [ tr [ class "bg-white border-b hover:bg-gray-50" ] <|
-        List.map
-            (\(Column c) ->
-                td [ class <| "px-4 py-2 " ++ c.class, style "width" c.width ] <|
-                    c.viewCell r state
+contentHead lens hasSelection resolve actSelect actSort columns state =
+    Internal.Tailwind.Table.head <|
+        List.indexedMap
+            (\i ((Column c) as col) ->
+                Internal.Tailwind.Table.headItem c.width <|
+                    viewHeader lens (resolve (iff (i == 0 && hasSelection) actSelect actSort)) col state
             )
             columns
-    , case ( cfg.table.expand, List.member (cfg.table.getID r) state.table.expanded ) of
-        ( Just (Column c), True ) ->
-            tr [ class "bg-white border-b hover:bg-gray-50" ]
-                [ td [ class "px-4 py-2", colspan (List.length columns) ] <|
-                    c.viewCell r state
-                ]
 
-        _ ->
-            text ""
-    , case ( cfg.subtable, List.member (cfg.table.getID r) state.table.subtable ) of
-        ( Just (SubTable getValue conf), True ) ->
-            tr []
-                [ td [ class "px-4 py-2", colspan (List.length columns) ]
-                    [ subtableContent config
-                        resolve
-                        (cfg.table.getID r)
-                        conf
-                        state
-                        (getValue r)
-                        (List.member (cfg.table.getID r) state.subtable.loading)
-                    ]
-                ]
 
-        _ ->
-            text ""
-    ]
+contentBody : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> List (Row a) -> Html msg
+contentBody config resolve columns state rows =
+    Internal.Tailwind.Table.body <| List.concat (List.map (contentBodyRow config resolve columns state) rows)
+
+
+contentBodyRow : Config a b msg -> Resolver msg -> List (Column a msg) -> State -> Row a -> List (Html msg)
+contentBodyRow ((Config cfg) as config) resolve columns state (Row r) =
+    Internal.Tailwind.Table.bodyContent
+        { cells = List.map (\(Column c) -> Internal.Tailwind.Table.cell c.class c.width (c.viewCell r state)) columns
+        , expand =
+            case ( cfg.table.expand, List.member (cfg.table.getID r) state.table.expanded ) of
+                ( Just (Column c), True ) ->
+                    Internal.Tailwind.Table.expandRow (List.length columns) (c.viewCell r state)
+
+                _ ->
+                    text ""
+        , subtable =
+            case ( cfg.subtable, List.member (cfg.table.getID r) state.table.subtable ) of
+                ( Just (SubTable getValue conf), True ) ->
+                    Internal.Tailwind.Table.subtableRow (List.length columns) <|
+                        subtableContent config
+                            resolve
+                            (cfg.table.getID r)
+                            conf
+                            state
+                            (getValue r)
+                            (List.member (cfg.table.getID r) state.subtable.loading)
+
+                _ ->
+                    text ""
+        }
 
 
 subtableContent :
@@ -343,40 +297,34 @@ subtableContent ((Config cfg) as config) resolve parent subConfig state data isL
                 |> prependMaybe expandColumn
                 |> prependMaybe selectColumn
     in
-    div [ class "relative overflow-x-auto shadow-md sm:rounded-lg" ]
-        [ if isLoading then
-            div [ class "m-4 flex flex-col items-center" ] [ Spinner.view ]
+    Internal.Tailwind.Table.subtable <|
+        if isLoading then
+            Internal.Tailwind.Table.subtableLoading
 
-          else
-            table [ class "w-full text-sm text-left text-gray-500" ]
-                [ tableContentHead lensSubTable (cfg.selection /= Disable) resolve SortSubColumn SelectSubColumn columns state
+        else
+            Internal.Tailwind.Table.subtableContent
+                [ contentHead lensSubTable (cfg.selection /= Disable) resolve SortSubColumn SelectSubColumn columns state
                 , subtableContentBody subConfig columns state rows
                 ]
-        ]
 
 
 subtableContentBody : ConfTable a msg -> List (Column a msg) -> State -> List (Row a) -> Html msg
 subtableContentBody cfg columns state rows =
-    tbody [] <| List.concat (List.map (subtableContentBodyRow cfg columns state) rows)
+    Internal.Tailwind.Table.body <| List.concat (List.map (subtableContentBodyRow cfg columns state) rows)
 
 
 subtableContentBodyRow : ConfTable a msg -> List (Column a msg) -> State -> Row a -> List (Html msg)
 subtableContentBodyRow cfg columns state (Row r) =
-    [ tr [ class "hover:bg-slate-100" ] <|
-        List.map
-            (\(Column c) ->
-                td [ class ("px-4 py-2 " ++ c.class), style "width" c.width ] <| c.viewCell r state
-            )
-            columns
-    , case ( cfg.expand, List.member (cfg.getID r) state.subtable.expanded ) of
-        ( Just (Column c), True ) ->
-            tr [ class "hover:bg-slate-100" ]
-                [ td [ class "px-4 py-2", colspan (List.length columns) ] <| c.viewCell r state
-                ]
+    Internal.Tailwind.Table.subtableBodyContent
+        { cells = List.map (\(Column c) -> Internal.Tailwind.Table.cell c.class c.width (c.viewCell r state)) columns
+        , expand =
+            case ( cfg.expand, List.member (cfg.getID r) state.subtable.expanded ) of
+                ( Just (Column c), True ) ->
+                    Internal.Tailwind.Table.expandRow (List.length columns) (c.viewCell r state)
 
-        _ ->
-            text ""
-    ]
+                _ ->
+                    text ""
+        }
 
 
 
@@ -385,14 +333,14 @@ subtableContentBodyRow cfg columns state (Row r) =
 --
 
 
-tableFooter : Config a b msg -> Resolver msg -> State -> Int -> Html msg
-tableFooter (Config cfg) resolve state total =
+footer : Config a b msg -> Resolver msg -> State -> Int -> Html msg
+footer (Config cfg) resolve state total =
     case cfg.pagination of
         ByPage _ ->
-            tableFooterPagination (resolve ChangePage) state.byPage state.page total
+            Pagination.pagination (resolve ChangePage) state.byPage state.page total
 
         Progressive { step } ->
-            tableFooterProgressive (resolve ShowMore) state.progressive state.byPage step total
+            Pagination.progressive (resolve ShowMore) state.progressive state.byPage step total
 
         None ->
             text ""

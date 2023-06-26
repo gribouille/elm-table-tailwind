@@ -1,12 +1,11 @@
 module Internal.Selection exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onCheck)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
 import Internal.State exposing (..)
+import Internal.Tailwind.Selection
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens, compose)
 import Table.Types exposing (..)
@@ -25,7 +24,7 @@ selectionParent onSelectRow config rows =
         , abbrev = ""
         , field = ""
         , width = "37px"
-        , class = "col-selection"
+        , class = ""
         , sortable = Nothing
         , searchable = Nothing
         , visible = True
@@ -37,32 +36,15 @@ selectionParent onSelectRow config rows =
 
 viewParentHeader : Config a b msg -> List (Row a) -> Column a msg -> ( State, Pipe msg ) -> List (Html msg)
 viewParentHeader config rows _ ( state, onSelectColumn ) =
-    [ div [ class "flex items-center" ]
-        [ input
-            [ class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-            , type_ "checkbox"
-            , id "checkbox-all"
-            , onCheck (\b -> onSelectColumn <| \s -> logicParentHeader config rows s b)
-            ]
-            []
-        , label [ for "checkbox-all", class "sr-only" ] [ text "checkbox" ]
-        ]
-    ]
+    Internal.Tailwind.Selection.parentHeader <| \b -> onSelectColumn <| \s -> logicParentHeader config rows s b
 
 
 viewParentCell : Config a b msg -> List (Row a) -> a -> ( State, Pipe msg ) -> List (Html msg)
 viewParentCell ((Config cfg) as config) rows value ( state, onSelectRow ) =
-    [ div [ class "flex items-center" ]
-        [ input
-            [ class "w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-            , type_ "checkbox"
-            , checked (List.member (cfg.table.getID value) state.table.selected)
-            , onCheck (\b -> onSelectRow <| \s -> logicParentCell config rows value s b)
-            ]
-            []
-        , label [ class "sr-only" ] [ text "checkbox" ]
-        ]
-    ]
+    Internal.Tailwind.Selection.parentCell
+        { isCheck = List.member (cfg.table.getID value) state.table.selected
+        , check = \b -> onSelectRow <| \s -> logicParentCell config rows value s b
+        }
 
 
 logicParentHeader : Config a b msg -> List (Row a) -> State -> Bool -> State
@@ -178,7 +160,7 @@ selectionChild pipe config rows id =
         , abbrev = ""
         , field = ""
         , width = "37px"
-        , class = "col-selection"
+        , class = ""
         , sortable = Nothing
         , searchable = Nothing
         , visible = True
@@ -192,14 +174,10 @@ viewChildHeader : Config a b msg -> List (Row b) -> RowID -> Column b msg -> ( S
 viewChildHeader ((Config cfg) as config) rows id _ ( state, pipe ) =
     case cfg.subtable of
         Just (SubTable _ conf) ->
-            [ input
-                [ class "checkbox"
-                , type_ "checkbox"
-                , onCheck (\b -> pipe <| \s -> logicChildHeader id config conf rows s b)
-                , disabled (cfg.selection == LinkedStrict)
-                ]
-                []
-            ]
+            Internal.Tailwind.Selection.childHeader
+                { isDisable = cfg.selection == LinkedStrict
+                , check = \b -> pipe <| \s -> logicChildHeader id config conf rows s b
+                }
 
         Nothing ->
             []
@@ -209,15 +187,11 @@ viewChildCell : Config a b msg -> List (Row b) -> RowID -> b -> ( State, Pipe ms
 viewChildCell ((Config cfg) as config) rows id value ( state, pipe ) =
     case cfg.subtable of
         Just (SubTable _ conf) ->
-            [ input
-                [ class "checkbox"
-                , type_ "checkbox"
-                , checked (List.member (conf.getID value) state.subtable.selected)
-                , onCheck (\check -> pipe <| \s -> logicChildCell id config conf rows value s check)
-                , disabled (cfg.selection == LinkedStrict)
-                ]
-                []
-            ]
+            Internal.Tailwind.Selection.childCell
+                { isDisable = cfg.selection == LinkedStrict
+                , check = \c -> pipe <| \s -> logicChildCell id config conf rows value s c
+                , value = List.member (conf.getID value) state.subtable.selected
+                }
 
         Nothing ->
             []

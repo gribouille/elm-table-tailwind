@@ -1,10 +1,10 @@
 module Internal.Config exposing (..)
 
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html)
 import Internal.Column exposing (..)
 import Internal.Data exposing (..)
 import Internal.State exposing (..)
+import Internal.Tailwind.Table
 import Table.Types exposing (..)
 
 
@@ -55,7 +55,7 @@ config onInternal getID columns =
         , table = ConfTable columns getID Nothing
         , pagination = None
         , subtable = Nothing
-        , errorView = errorView
+        , errorView = Internal.Tailwind.Table.errorView
         , toolbar = []
         , actions = []
         }
@@ -144,14 +144,6 @@ withSubtable getValues getID columns expand (Config c) =
         , toolbar = c.toolbar
         , actions = c.actions
         }
-
-
-errorView : String -> Html msg
-errorView msg =
-    -- TODO: move
-    div [ class "m-6 bg-red-100 text-red-700 p-6 border-t-2 border-b-2 border-red-700" ]
-        [ text msg
-        ]
 
 
 resolve : Config a b msg -> Model a -> Action -> Pipe msg

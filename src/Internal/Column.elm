@@ -1,14 +1,9 @@
 module Internal.Column exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
 import Internal.Data exposing (..)
-import Internal.Icon.Collapse as Collapse
-import Internal.Icon.Expand as Expand
-import Internal.Icon.Minus as Minus
-import Internal.Icon.Plus as Plus
 import Internal.State exposing (..)
+import Internal.Tailwind.Column
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
 import Table.Types exposing (Sort(..))
@@ -231,21 +226,15 @@ viewExpand onExpand onCollapse lens getID v state =
         updatedExpand =
             iff isExpanded (List.filter ((/=) id) conf.expanded) (id :: conf.expanded)
     in
-    [ button
-        [ class "w-6 h-6 pl-3 text-blue-600 hover:text-blue-300"
-        , type_ "button"
-        , onClick <| iff isExpanded onCollapse onExpand <| \s -> lens.set { conf | expanded = updatedExpand } s
-        ]
-        [ iff isExpanded Collapse.view Expand.view ]
-    ]
+    Internal.Tailwind.Column.expand isExpanded <|
+        iff isExpanded onCollapse onExpand <|
+            \s -> lens.set { conf | expanded = updatedExpand } s
 
 
 viewSubtable : Pipe msg -> (a -> Bool) -> Lens State StateTable -> (a -> String) -> a -> State -> List (Html msg)
 viewSubtable onShowSubtable isDisable lens getID v state =
     if isDisable v then
-        [ a [ class <| "w-6 h-6 " ++ isDisabled, disabled True ]
-            [ Plus.view ]
-        ]
+        Internal.Tailwind.Column.subtableDisable
 
     else
         let
@@ -261,52 +250,32 @@ viewSubtable onShowSubtable isDisable lens getID v state =
             updatedExpand =
                 iff isExpanded (List.filter ((/=) id) conf.subtable) (id :: conf.subtable)
         in
-        [ button
-            [ class "w-6 h-6 text-blue-600 hover:text-blue-300"
-            , type_ "button"
-            , onClick <| onShowSubtable <| \s -> lens.set { conf | subtable = updatedExpand } s
-            ]
-            [ iff isExpanded Minus.view Plus.view ]
-        ]
+        Internal.Tailwind.Column.subtable isExpanded <|
+            onShowSubtable <|
+                \s -> lens.set { conf | subtable = updatedExpand } s
 
 
 viewHeader : Lens State StateTable -> Pipe msg -> Column a msg -> State -> List (Html msg)
 viewHeader lens onSort (Column col) state =
-    [ iff (String.isEmpty col.abbrev) (span [] [ text col.name ]) (abbr [ title col.name ] [ text col.abbrev ])
-    , iff (col.sortable /= Nothing)
-        (a
-            [ class "ml-2 text-gray-400 hover:text-blue-500 hover:cursor-pointer"
-            , onClick <|
-                onSort <|
-                    \s ->
-                        let
-                            st =
-                                lens.get s
-                        in
-                        lens.set
-                            { st
-                                | order =
-                                    iff ((lens.get state).orderBy == Just col.field)
-                                        (next st.order)
-                                        Ascending
-                                , orderBy = Just col.field
-                            }
-                            s
-            ]
-            [ text <| iff ((lens.get state).orderBy == Just col.field) (symbolSort (lens.get state).order) "⇅" ]
-        )
-        (text "")
-    ]
-
-
-symbolSort : Sort -> String
-symbolSort order =
-    case order of
-        Ascending ->
-            "↿"
-
-        Descending ->
-            "⇂"
-
-        StandBy ->
-            "⇅"
+    Internal.Tailwind.Column.header
+        { abbrev = col.abbrev
+        , name = col.name
+        , isSortable = col.sortable /= Nothing
+        , sort = iff ((lens.get state).orderBy == Just col.field) (lens.get state).order StandBy
+        , click =
+            onSort <|
+                \s ->
+                    let
+                        st =
+                            lens.get s
+                    in
+                    lens.set
+                        { st
+                            | order =
+                                iff ((lens.get state).orderBy == Just col.field)
+                                    (next st.order)
+                                    Ascending
+                            , orderBy = Just col.field
+                        }
+                        s
+        }

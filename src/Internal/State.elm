@@ -22,8 +22,8 @@ type alias Pagination =
 
 
 type alias State =
-    { page : Int -- TODO: move to StateTable
-    , byPage : Int -- TODO: move to StateTable
+    { page : Int
+    , byPage : Int
     , progressive : Bool
     , search : String
     , btPagination : Bool
