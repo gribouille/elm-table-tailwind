@@ -7,15 +7,16 @@ Full features ELM table component for Tailwind.
 - [x] feat: _load more_ pagination
 - [x] refact: remove specific style
 - [ ] feat: pagination for subtable
-- [ ] feat: dynamic subtable data
+- [x] feat: dynamic subtable data
 - [ ] misc: documentation (more example)
 - [x] sort subtable
 - [ ] refact (v4): more explicit parameter
 - [ ] refact (v4): generic view
 - [ ] refact (v4): merge elm-table-tailwind and elm-table
-- [ ] refact (v4): remove static/dynamic table
+- [x] refact (v4): remove static/dynamic table
 - [ ] feat: infinite scroll
 - [ ] feat: iterop: JS API
+- [x] bug: static pagination limit
 
 
 ## Usage

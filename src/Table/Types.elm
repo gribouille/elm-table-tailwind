@@ -1,4 +1,7 @@
-module Table.Types exposing (Selection(..), Type(..), Sort(..), Status(..))
+module Table.Types exposing
+    ( Selection(..), Type(..), Sort(..), Status(..)
+    , Action(..)
+    )
 
 {-| Common types.
 
@@ -72,3 +75,33 @@ type Status a
     = Loading
     | Loaded a
     | Failed String
+
+
+{-| TODO: doc
+TODO: clean up
+-}
+type Action
+    = SearchInput
+    | SearchEnter
+    | ChangePageIndex
+    | ShowColumn
+    | ShowSubColumn
+    | Expand
+    | Collapse
+    | ShowSubtable
+    | SortColumn
+    | SortSubColumn
+    | SelectColumn
+    | SelectSubColumn
+    | SelectRow
+    | OpenMenuPagination
+    | OpenMenuColumns
+    | OpenMenuSubColumns
+    | ChangeByPage
+    | ChangeColumnVisibility
+    | ChangeSubColumnVisibility
+    | ChangePage
+    | ShowMore
+    | InputSearch
+    | EnterSearch
+    | Neutral

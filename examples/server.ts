@@ -21,8 +21,8 @@ app.get('/users', async (req: Request, res: Response) => {
     total: faker.number.int({ min: per_page, max: 1000 }),
     items: faker.helpers.multiple(() => ({
       id: faker.string.uuid(),
-      first_name: faker.person.firstName(),
-      last_name: faker.person.lastName(),
+      firstname: faker.person.firstName(),
+      lastname: faker.person.lastName(),
       email: faker.internet.email(),
       job: faker.person.jobTitle(),
       bio: faker.person.bio()
@@ -41,9 +41,9 @@ app.get('/reservations', async (req: express.Request, res: express.Response) => 
       id: faker.string.uuid(),
       airline: faker.airline.airline(),
       airplane: faker.airline.airplane(),
-      number: faker.airline.flightNumber(),
+      number: Number(faker.airline.flightNumber()),
       seat: faker.airline.seat()
-    }), { count: per_page })
+    }), { count: Number(per_page) })
   })
 })
 

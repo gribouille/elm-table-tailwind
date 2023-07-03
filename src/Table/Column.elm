@@ -1,7 +1,7 @@
 module Table.Column exposing
     ( Column, ViewCell, ViewHeader
     , bool, default, float, int, string
-    , withClass, withDefault, withHeaderView, withHiddable, withHidden
+    , withClass, withDefault, withHiddable, withHidden, withField, withAbbreviation
     , withSearchable, withSortable, withUnSortable, withView, withWidth
     )
 
@@ -17,7 +17,7 @@ module Table.Column exposing
 
 # Customization
 
-@docs withClass, withDefault, withHeaderView, withHiddable, withHidden
+@docs withClass, withDefault, withHiddable, withHidden, withField, withAbbreviation
 @docs withSearchable, withSortable, withUnSortable, withView, withWidth
 
 -}
@@ -101,13 +101,6 @@ withView =
     Internal.Column.withView
 
 
-{-| Define a specific function to render the header.
--}
-withHeaderView : ViewHeader a msg -> Column a msg -> Column a msg
-withHeaderView =
-    Internal.Column.withHeaderView
-
-
 {-| Define a CSS class for the column.
 -}
 withClass : String -> Column a msg -> Column a msg
@@ -115,36 +108,49 @@ withClass =
     Internal.Column.withClass
 
 
+{-| TODO
+-}
+withAbbreviation : String -> Column a msg -> Column a msg
+withAbbreviation =
+    Internal.Column.withAbbreviation
+
+
+{-| -}
+withField : String -> Column a msg -> Column a msg
+withField =
+    Internal.Column.withField
+
+
 {-| Create an agnostic column with a rendering function.
 -}
-default : String -> String -> String -> ViewCell a msg -> Column a msg
+default : String -> String -> ViewCell a msg -> Column a msg
 default =
     Internal.Column.default
 
 
 {-| Create an column for integers.
 -}
-int : (a -> Int) -> String -> String -> String -> Column a msg
+int : (a -> Int) -> String -> String -> Column a msg
 int =
     Internal.Column.int
 
 
 {-| Create a column for strings.
 -}
-string : (a -> String) -> String -> String -> String -> Column a msg
+string : (a -> String) -> String -> String -> Column a msg
 string =
     Internal.Column.string
 
 
 {-| Create a column for booleans.
 -}
-bool : (a -> Bool) -> String -> String -> String -> Column a msg
+bool : (a -> Bool) -> String -> String -> Column a msg
 bool =
     Internal.Column.bool
 
 
 {-| Create a column for floats.
 -}
-float : (a -> Float) -> String -> String -> String -> Column a msg
+float : (a -> Float) -> String -> String -> Column a msg
 float =
     Internal.Column.float

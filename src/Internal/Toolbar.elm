@@ -1,8 +1,6 @@
 module Internal.Toolbar exposing (view)
 
 import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (onCheck, onClick)
 import Internal.Column exposing (..)
 import Internal.Config exposing (..)
 import Internal.Data exposing (..)
@@ -10,23 +8,24 @@ import Internal.Icon.Grid as Grid
 import Internal.Icon.GridSmall as GridSmall
 import Internal.Icon.Layout as Layout
 import Internal.State exposing (..)
+import Internal.Tailwind.Toolbar
 import Internal.Util exposing (..)
 import Monocle.Lens exposing (Lens)
-import Svg exposing (Svg)
+import Table.Types exposing (Action(..))
 
 
-view : Config a b msg -> Pipe msg -> Pipe msg -> State -> List (Html msg)
-view (Config cfg) pipeExt pipeInt state =
+view : Config a b msg -> Resolver msg -> State -> List (Html msg)
+view (Config cfg) resolve state =
     [ case cfg.pagination of
         ByPage { capabilities } ->
-            toolbarMenuPagination pipeExt pipeInt state capabilities
+            toolbarMenuPagination (resolve OpenMenuPagination) (resolve ChangeByPage) state capabilities
 
         _ ->
             text ""
-    , toolbarMenuColumns cfg.table.columns pipeInt state
+    , toolbarMenuColumns cfg.table.columns (resolve OpenMenuColumns) (resolve ChangeColumnVisibility) state
     , case cfg.subtable of
         Just (SubTable _ conf) ->
-            toolbarMenuSubColumns conf.columns pipeInt state
+            toolbarMenuSubColumns conf.columns (resolve OpenMenuSubColumns) (resolve ChangeSubColumnVisibility) state
 
         Nothing ->
             text ""
@@ -34,74 +33,68 @@ view (Config cfg) pipeExt pipeInt state =
 
 
 toolbarMenuPagination : Pipe msg -> Pipe msg -> State -> List Int -> Html msg
-toolbarMenuPagination pipeExt pipeInt state capabilities =
-    toolbarMenuDropdown
-        Layout.view
-        "Pagination"
-        (pipeInt <|
-            \s ->
-                { s
-                    | btPagination = not s.btPagination
-                    , btColumns = False
-                    , btSubColumns = False
-                }
-        )
-        state.btPagination
-        (List.map
-            (\i ->
-                li
-                    []
-                    [ a
-                        [ class "block py-2 px-4 hover:bg-gray-100 hover:cursor-pointer"
-                        , onClick (pipeExt <| \s -> { s | byPage = i, page = iff (i /= s.byPage) 0 s.page })
-                        ]
-                        [ text (String.fromInt i)
-                        , iff (i == state.byPage)
-                            (span [ class "text-green-700 font-bold float-right" ] [ text "✓" ])
-                            (text "")
-                        ]
-                    ]
-            )
-            capabilities
-        )
+toolbarMenuPagination onOpenMenuPagination onChangeByPage state capabilities =
+    Internal.Tailwind.Toolbar.dropdown
+        { btn = Layout.view
+        , tooltip = "Pagination"
+        , click =
+            onOpenMenuPagination <|
+                \s ->
+                    { s
+                        | btPagination = not s.btPagination
+                        , btColumns = False
+                        , btSubColumns = False
+                    }
+        , isActive = state.btPagination
+        , items =
+            List.map
+                (\i ->
+                    Internal.Tailwind.Toolbar.paginationMenuItem (i == state.byPage)
+                        (onChangeByPage <| \s -> { s | byPage = i, page = iff (i /= s.byPage) 0 s.page })
+                        i
+                )
+                capabilities
+        }
 
 
-toolbarMenuColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
-toolbarMenuColumns columns pipeInt state =
-    toolbarMenuDropdown
-        Grid.view
-        "Columns"
-        (pipeInt <|
-            \s ->
-                { s
-                    | btColumns = not s.btColumns
-                    , btPagination = False
-                    , btSubColumns = False
-                }
-        )
-        state.btColumns
-        (List.filterMap (dropdownItem pipeInt state lensTable) <|
-            List.map (\(Column c) -> ( c.name, c.hiddable )) columns
-        )
+toolbarMenuColumns : List (Column a msg) -> Pipe msg -> Pipe msg -> State -> Html msg
+toolbarMenuColumns columns onOpenMenuColumns onChangeColumnVisibility state =
+    Internal.Tailwind.Toolbar.dropdown
+        { btn = Grid.view
+        , tooltip = "Columns"
+        , click =
+            onOpenMenuColumns <|
+                \s ->
+                    { s
+                        | btColumns = not s.btColumns
+                        , btPagination = False
+                        , btSubColumns = False
+                    }
+        , isActive = state.btColumns
+        , items =
+            List.filterMap (dropdownItem onChangeColumnVisibility state lensTable) <|
+                List.map (\(Column c) -> ( c.name, c.hiddable )) columns
+        }
 
 
-toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> State -> Html msg
-toolbarMenuSubColumns columns pipeInt state =
-    toolbarMenuDropdown
-        GridSmall.view
-        "Columns of subtable"
-        (pipeInt <|
-            \s ->
-                { s
-                    | btSubColumns = not s.btSubColumns
-                    , btColumns = False
-                    , btPagination = False
-                }
-        )
-        state.btSubColumns
-        (List.filterMap (dropdownItem pipeInt state lensSubTable) <|
-            List.map (\(Column c) -> ( c.name, c.hiddable )) columns
-        )
+toolbarMenuSubColumns : List (Column a msg) -> Pipe msg -> Pipe msg -> State -> Html msg
+toolbarMenuSubColumns columns onOpenMenuSubColumns onChangeSubColumnVisibility state =
+    Internal.Tailwind.Toolbar.dropdown
+        { btn = GridSmall.view
+        , tooltip = "Columns of subtable"
+        , click =
+            onOpenMenuSubColumns <|
+                \s ->
+                    { s
+                        | btSubColumns = not s.btSubColumns
+                        , btColumns = False
+                        , btPagination = False
+                    }
+        , isActive = state.btSubColumns
+        , items =
+            List.filterMap (dropdownItem onChangeSubColumnVisibility state lensSubTable) <|
+                List.map (\(Column c) -> ( c.name, c.hiddable )) columns
+        }
 
 
 dropdownItem : Pipe msg -> State -> Lens State StateTable -> ( String, Bool ) -> Maybe (Html msg)
@@ -122,45 +115,5 @@ dropdownItem pipeInt state lens ( name, hiddable ) =
             pipeInt <| \s -> lens.set { stateTable | visible = visible } s
     in
     iff hiddable
-        (Just
-            (li []
-                [ a
-                    [ class "block py-2 px-4 hover:bg-gray-100 hover:cursor-pointer"
-                    , onClick msg
-                    ]
-                    [ text name
-                    , input
-                        [ class "is-checkradio float-right"
-                        , type_ "checkbox"
-                        , checked chk
-                        , onCheck (\_ -> msg)
-                        ]
-                        []
-                    ]
-                ]
-            )
-        )
+        (Just <| Internal.Tailwind.Toolbar.dropdownItem name msg (\_ -> msg) chk)
         Nothing
-
-
-toolbarMenuDropdown : Svg msg -> String -> msg -> Bool -> List (Html msg) -> Html msg
-toolbarMenuDropdown btn tt msg active items =
-    div [ class "relative", id "dropdown" ]
-        [ button
-            [ type_ "button"
-            , onClick msg
-            , attribute "tooltip" tt
-            , attribute "data-tippy-content" tt
-            , attribute "data-tippy-placement" "bottom"
-            , class """text-gray-900 bg-white border border-gray-200 hover:bg-gray-100
-                       hover:text-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300
-                       font-medium rounded-lg text-sm flex justify-center items-center p-0.5
-                       w-10 h-9
-                    """
-            ]
-            [ btn ]
-        , div
-            [ class <| "z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow origin-top-right absolute right-0" ++ iff active "" " hidden"
-            ]
-            [ ul [ class "py-1 text-sm text-gray-700" ] items ]
-        ]

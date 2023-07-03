@@ -1,12 +1,13 @@
+const examples = [
+  { name: 'Static', node: 'static' },
+  { name: 'Dynamic', node: 'dynamic' },
+  { name: 'Subtable', node: 'subtable' },
+  { name: 'DynamicProgressive', node: 'dynamic_progressive' },
+  { name: 'StaticProgressive', node: 'static_progressive' },
+  { name: 'DynamicSubtable', node: 'dynamic_subtable' }
+]
 
-import { Elm as AppDynamic } from "./src/Dynamic.elm"
-import { Elm as AppDynamicProgressive } from "./src/DynamicProgressive.elm"
-import { Elm as AppStatic } from "./src/Static.elm"
-import { Elm as AppStaticProgressive } from "./src/StaticProgressive.elm"
-import { Elm as AppSubtable } from "./src/Subtable.elm"
-
-AppStatic.Static.init({ node: document.getElementById('static') })
-AppDynamic.Dynamic.init({ node: document.getElementById('dynamic') })
-AppSubtable.Subtable.init({ node: document.getElementById('subtable') })
-AppStaticProgressive.StaticProgressive.init({ node: document.getElementById('static_progressive') })
-AppDynamicProgressive.DynamicProgressive.init({ node: document.getElementById('dynamic_progressive') })
+examples.forEach(async ({ name, node }) => {
+  const mod = await import(`./src/${name}.elm`)
+  mod.Elm[name].init({ node: document.getElementById(node) })
+})

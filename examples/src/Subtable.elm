@@ -11,7 +11,6 @@ import Table.Config as Config
 import Table.Types exposing (Selection(..))
 
 
-
 type alias Model =
     { selection : Selection
     , table : Table.Model Movie
@@ -24,23 +23,24 @@ type Msg
 
 
 columnsMovie =
-    [ Column.string .id "ID" "" "" |> Column.withDefault False
-    , Column.string .title "Title" "" ""
-    , Column.string .original_title "Original title" "" ""
-    , Column.string .original_title_romanised "Original title romanised" "" ""
-    , Column.string .director "Director" "" ""
-    , Column.string .producer "Producer" "" ""
-    , Column.int .release_date "Release date" "" ""
-    , Column.int .running_time "Running time" "" ""
-    , Column.int .rt_score "RT score" "" ""
+    [ Column.string .id "ID" "" |> Column.withDefault False
+    , Column.string .title "Title" ""
+    , Column.string .original_title "Original title" ""
+    , Column.string .original_title_romanised "Original title romanised" ""
+    , Column.string .director "Director" ""
+    , Column.string .producer "Producer" ""
+    , Column.int .release_date "Release date" ""
+    , Column.int .running_time "Running time" ""
+    , Column.int .rt_score "RT score" ""
     ]
 
 
 columnsPerson =
-    [ Column.string .id "ID" "" "" |> Column.withDefault False
-    , Column.string .name "name" "" ""
-    , Column.string .gender "Gender" "" ""
-    , Column.default "Age" "" ""
+    [ Column.string .id "ID" "" |> Column.withDefault False
+    , Column.string .name "name" ""
+    , Column.string .gender "Gender" ""
+    , Column.default "Age"
+        ""
         (\x _ ->
             [ case x.age of
                 Nothing ->
@@ -50,14 +50,14 @@ columnsPerson =
                     text <| String.fromInt v
             ]
         )
-    , Column.string .eye_color "Eye color" "" ""
-    , Column.string .hair_color "Hair color" "" ""
+    , Column.string .eye_color "Eye color" ""
+    , Column.string .hair_color "Hair color" ""
     ]
 
 
 radio : String -> Selection -> Selection -> Html Msg
 radio n exp got =
-    div [ class "flex items-center mr-4"]
+    div [ class "flex items-center mr-4" ]
         [ input
             [ type_ "radio"
             , name "radio"
@@ -67,18 +67,18 @@ radio n exp got =
             ]
             []
         , label [ class "block ml-2 text-sm font-medium text-gray-900" ]
-            [ text n]
+            [ text n ]
         ]
 
 
 config : Selection -> Table.Config Movie Person Msg
 config s =
-    Table.static
+    Table.config
         OnTable
         .id
         columnsMovie
         |> Config.withSelection s
-        |> Config.withExpand (Column.string .description "Description" "" "")
+        |> Config.withExpand (Column.string .description "Description" "")
         |> Config.withPagination [ 5, 10, 20, 50 ] 10
         |> Config.withSubtable .people .id columnsPerson Nothing
         |> Config.withToolbar
@@ -104,7 +104,7 @@ main =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { selection = Disable
-      , table = Table.init (config Disable) |> Table.loadedStatic movies
+      , table = Table.loaded (Table.init (config Disable)) movies (List.length movies)
       }
     , Cmd.none
     )

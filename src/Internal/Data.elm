@@ -1,6 +1,7 @@
 module Internal.Data exposing (..)
 
-import Internal.State exposing (Pagination, RowID, State, lensProgressive)
+import Internal.State exposing (Pagination, RowID, State, lensProgressive, lensSubTableLoading)
+import Internal.Util exposing (iff)
 import Monocle.Lens exposing (Lens)
 import Table.Types exposing (..)
 
@@ -43,6 +44,32 @@ loading (Model model) =
     Model { model | rows = Rows <| Loading }
 
 
+loadingSubtable : String -> Model a -> Model a
+loadingSubtable id (Model model) =
+    let
+        ids =
+            lensSubTableLoading.get model.state
+
+        upd =
+            if List.member id ids then
+                List.filter ((/=) id) ids
+
+            else
+                iff (String.isEmpty id) ids (id :: ids)
+    in
+    Model { model | state = lensSubTableLoading.set upd model.state }
+
+
+lastExpand : Model a -> String
+lastExpand (Model { state }) =
+    List.head state.table.subtable |> Maybe.withDefault ""
+
+
+loadingSubtableLast : Model a -> Model a
+loadingSubtableLast m =
+    loadingSubtable (lastExpand m) m
+
+
 failed : Model a -> String -> Model a
 failed (Model model) msg =
     Model
@@ -80,6 +107,16 @@ getItems (Rows s) =
 
         _ ->
             []
+
+
+length : Rows a -> Int
+length (Rows s) =
+    case s of
+        Loaded { rows } ->
+            List.length rows
+
+        _ ->
+            0
 
 
 stateLens : Lens (Model a) State
